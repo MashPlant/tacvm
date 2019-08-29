@@ -130,9 +130,9 @@ pub fn vtbl_slot<'a>(i: Span<'a>) -> IResult<RawVTblSlot<'a>> {
   let new = |kind: RawVTblSlotKind<'a>| RawVTblSlot { line: i.line, kind };
   alt((
     map(str, move |s| new(String(unescape(s).unwrap().into()))),
-    map(tag(EMPTY), move |_| new(VTblRef(None))),
+    map(tag(EMPTY), move |_| new(Empty)),
     map(terminated(id, tuple((space0, tag(";")))), move |name| new(FuncRef(name))),
-    map(id, move |name| new(VTblRef(Some(name)))),
+    map(id, move |name| new(VTblRef(name))),
   ))(i)
 }
 

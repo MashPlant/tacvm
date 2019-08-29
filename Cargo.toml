@@ -9,6 +9,7 @@ nom = "5"
 nom_locate = "1.0.0"
 unescape = "0.1.0"
 indexmap = "1.0.2"
+text_io = "0.1.7"
 
 [lib]
 path = "src/lib.rs"

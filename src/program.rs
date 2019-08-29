@@ -1,5 +1,5 @@
 use indexmap::IndexSet;
-use crate::{exec::{intrinsic, IntrinsicFn}, MAIN};
+use crate::{vm::{intrinsic, IntrinsicFn}, MAIN};
 
 #[derive(Debug, Clone)]
 pub struct RawProgram<'a> {
@@ -22,7 +22,8 @@ pub struct RawVTblSlot<'a> {
 
 #[derive(Debug, Clone)]
 pub enum RawVTblSlotKind<'a> {
-  VTblRef(Option<&'a str>),
+  Empty,
+  VTblRef(&'a str),
   String(Box<str>),
   FuncRef(&'a str),
 }
@@ -69,10 +70,10 @@ pub enum CallKind<'a> {
   Named(&'a str),
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone)]
 pub enum BinOp { Add, Sub, Mul, Div, Mod, And, Or, Eq, Ne, Lt, Le, Gt, Ge }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone)]
 pub enum UnOp { Neg, Not }
 
 impl BinOp {
@@ -103,22 +104,25 @@ impl UnOp {
 }
 
 pub struct Program<'a> {
+  // entry function index
   pub entry: u32,
-  pub vtbl: Vec<VTbl<'a>>,
+  pub vtbl: Vec<Box<[VTblSlot]>>,
   pub func: Vec<Func<'a>>,
-  pub code: Vec<Inst>,
-  pub raw_code: Vec<&'a RawInst<'a>>,
   pub str_pool: IndexSet<&'a str>,
 }
 
-pub struct VTbl<'a> {
-  pub data: Box<[u32]>,
-  pub raw_vtbl: &'a RawVTbl<'a>,
+#[derive(Copy, Clone)]
+pub enum VTblSlot {
+  Empty,
+  VTblRef(u32),
+  String(u32),
+  FuncRef(u32),
 }
 
 pub struct Func<'a> {
-  pub entry: u32,
   pub stack_size: u32,
+  pub code: Vec<Inst>,
+  pub raw_code: Vec<&'a RawInst<'a>>,
   pub raw_func: &'a RawFunc<'a>,
 }
 
@@ -135,38 +139,46 @@ impl<'a> Program<'a> {
         return Err(format!("Line {}: duplicate function `{}`.", f.line, f.name));
       }
     }
-    let (mut vtbl, mut func, mut code, mut raw_code) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let mut vtbl = Vec::with_capacity(raw.vtbl.len());
     for v in &raw.vtbl {
-      let mut data = vec![0; v.data.len()].into_boxed_slice();
-      for (idx, s) in v.data.iter().enumerate() {
-        data[idx] = match &s.kind {
-          &RawVTblSlotKind::VTblRef(v) => if let Some(v) = v {
-            if let Some((idx, _)) = vtbl_set.get_full(v) { idx as u32 } else { return Err(format!("Line {}: no such vtbl `{}`.", s.line, v)); }
-          } else { 0 },
-          RawVTblSlotKind::String(s) => str_pool.insert_full(s).0 as u32,
-          &RawVTblSlotKind::FuncRef(f) =>
-            if let Some((idx, _)) = func_set.get_full(f) { idx as u32 } else { return Err(format!("Line {}: no such function `{}`.", s.line, f)); }
-        }
+      let mut data = Vec::with_capacity(v.data.len());
+      for s in &v.data {
+        data.push(match &s.kind {
+          RawVTblSlotKind::Empty => VTblSlot::Empty,
+          &RawVTblSlotKind::VTblRef(v) => if let Some((idx, _)) = vtbl_set.get_full(v) { VTblSlot::VTblRef(idx as u32) } else {
+            return Err(format!("Line {}: no such vtbl `{}`.", s.line, v));
+          }
+          RawVTblSlotKind::String(s) => VTblSlot::String(str_pool.insert_full(s).0 as u32),
+          &RawVTblSlotKind::FuncRef(f) => if let Some((idx, _)) = func_set.get_full(f) { VTblSlot::FuncRef(idx as u32) } else {
+            return Err(format!("Line {}: no such function `{}`.", s.line, f));
+          }
+        });
       }
-      vtbl.push(VTbl { data, raw_vtbl: v });
+      vtbl.push(data.into());
     }
+    let mut func = Vec::with_capacity(raw.func.len());
     let mut label_set = Vec::new();
     for f in &raw.func {
+      let (mut code, mut raw_code) = (Vec::new(), Vec::new());
       label_set.clear();
-      let entry = code.len() as u32;
-      let mut idx = entry;
+      let mut idx = 0;
       for i in &f.code {
-        if let RawInstKind::Label(l) = i.kind {
-          let l = l as usize;
-          if label_set.len() <= l {
-            label_set.resize(l + 1, 0);
+        idx += match &i.kind {
+          &RawInstKind::Label(l) => {
+            let l = l as usize;
+            if label_set.len() <= l {
+              label_set.resize(l + 1, 0);
+            }
+            label_set[l] = idx;
+            0
           }
-          label_set[l] = idx;
-        } else { idx += 1; }
+          &RawInstKind::Call(d, _) => if d.is_some() { 2 } else { 1 },
+          _ => 1,
+        }
       }
-      let mut idx = entry;
-      let mut stack_size = 0;
-      let mut upd = |r: u32| (stack_size = r.max(stack_size), r).1;
+      let mut idx = 0;
+      let mut max_stack = 0;
+      let mut upd = |r: u32| (max_stack = r.max(max_stack), r).1;
       for i in &f.code {
         use Operand::*;
         use Inst::*;
@@ -190,15 +202,25 @@ impl<'a> Program<'a> {
           &RawInstKind::Mv(d, r) => match r { Reg(r) => Mv(upd(d), upd(r)), Const(r) => Li(upd(d), r), }
           &RawInstKind::Param(r) => match r { Reg(r) => ParamR(upd(r)), Const(r) => ParamC(r), }
           &RawInstKind::Call(d, c) => {
-            if let Some(d) = d { upd(d); }
-            match c {
-              CallKind::Reg(c) => CallV(d, upd(c)),
-              CallKind::Named(name) => if let Some(f) = intrinsic(name) { CallI(d, f) } else {
-                if let Some((idx, _)) = func_set.get_full(name) { CallS(d, idx as u32) } else { return Err(format!("Line {}: no such function `{}`.", i.line, name)); }
+            code.push(match c {
+              CallKind::Reg(r) => Call(Operand::Reg(upd(r))),
+              CallKind::Named(name) => if let Some(i) = intrinsic(name) { Intrinsic(i) } else {
+                if let Some((idx, _)) = func_set.get_full(name) { Call(Operand::Const(idx as i32)) } else { return Err(format!("Line {}: no such function `{}`.", i.line, name)); }
               }
-            }
+            });
+            raw_code.push(i);
+            idx += if let Some(d) = d {
+              code.push(GetRet(d));
+              raw_code.push(i);
+              upd(d);
+              2
+            } else { 1 };
+            continue;
           }
-          &RawInstKind::Ret(r) => match r { None => Ret, Some(Reg(r)) => RetR(upd(r)), Some(Const(r)) => RetC(r), }
+          &RawInstKind::Ret(r) => {
+            if let Some(Operand::Reg(r)) = r { upd(r); }
+            Ret(r)
+          }
           &RawInstKind::J(l) => J(chk_label(l)?),
           &RawInstKind::B(r, z, l) => {
             let l = chk_label(l)?;
@@ -210,22 +232,25 @@ impl<'a> Program<'a> {
           &RawInstKind::Label(_) => continue,
           &RawInstKind::Load(d, base, off) => Load(upd(d), upd(base), off),
           &RawInstKind::Store(r, base, off) => match r { Reg(r) => StoreR(upd(r), base, off), Const(r) => StoreC(r, base, off) }
-          RawInstKind::LStr(d, s) => Li(upd(*d), str_pool.insert_full(s).0 as i32),
-          &RawInstKind::LVTbl(d, v) => Li(upd(d), if let Some((idx, _)) = vtbl_set.get_full(v) { idx as i32 } else { return Err(format!("Line {}: no such vtbl `{}`.", i.line, v)); })
+          RawInstKind::LStr(d, s) => LStr(upd(*d), str_pool.insert_full(s).0 as u32),
+          &RawInstKind::LVTbl(d, v) => LVTbl(upd(d), if let Some((idx, _)) = vtbl_set.get_full(v) { idx as u32 } else { return Err(format!("Line {}: no such vtbl `{}`.", i.line, v)); })
         };
-        idx += 1;
+        idx += 1; // Call and Label won't reach here
         code.push(inst);
         raw_code.push(i);
       }
-      func.push(Func { entry, stack_size, raw_func: f })
+      func.push(Func { stack_size: max_stack + 1, code, raw_code, raw_func: f })
     }
     let entry = if let Some((idx, _)) = func_set.get_full(MAIN) { idx as u32 } else {
       return Err(format!("No function named `{}` found.", MAIN));
     };
-    Ok(Program { entry, vtbl, func, code, raw_code, str_pool })
+    Ok(Program { entry, vtbl, func, str_pool })
   }
 }
 
+// for simple instruction(like Bin, Store), distinguish R and C and handle them separately
+// for complex instruction(like Call, Ret), doesn't distinguish R and C, just use Operand
+#[derive(Copy, Clone)]
 pub enum Inst {
   BinRR(BinOp, u32, u32, u32),
   BinRC(BinOp, u32, u32, i32),
@@ -234,14 +259,14 @@ pub enum Inst {
   Not(u32, u32),
   Mv(u32, u32),
   Li(u32, i32),
+  LStr(u32, u32),
+  LVTbl(u32, u32),
   ParamR(u32),
   ParamC(i32),
-  CallI(Option<u32>, IntrinsicFn),
-  CallS(Option<u32>, u32),
-  CallV(Option<u32>, u32),
-  Ret,
-  RetR(u32),
-  RetC(i32),
+  Intrinsic(IntrinsicFn),
+  Call(Operand),
+  GetRet(u32),
+  Ret(Option<Operand>),
   J(u32),
   Bz(u32, u32),
   Bnz(u32, u32),

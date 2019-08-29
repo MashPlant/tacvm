@@ -1,7 +1,11 @@
+#[macro_use]
+extern crate text_io;
+
 pub mod parser;
 pub mod program;
 pub mod mem;
-pub mod exec;
+pub mod error;
+pub mod vm;
 
 pub const MAIN: &str = "main";
 
