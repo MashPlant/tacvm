@@ -1,14 +1,13 @@
 use crate::mem::Mem;
-use crate::program::Inst;
 
 pub struct Frame {
-  saved_pc: u32,
-  data: Box<[u32]>,
+  pub saved_pc: u32,
+  pub data: Box<[u32]>,
 }
 
 pub struct VM {
-  mem: Mem,
-  stack: Vec<Frame>,
+  pub mem: Mem,
+  pub stack: Vec<Frame>,
 }
 
 impl VM {
@@ -18,4 +17,23 @@ impl VM {
 //
 //    }
 //  }
+}
+
+// intrinsic functions return -1 for halt
+const HALT_CODE: u32 = !0;
+
+pub type IntrinsicFn = fn(arg0: u32, arg1: u32, mem: &Mem) -> u32;
+
+pub fn intrinsic(name: &str) -> Option<IntrinsicFn> {
+  match name {
+    "_Alloc" => Some(|_, _, _| 0),
+    "_ReadLine" => Some(|_, _, _| 0),
+    "_ReadInt" => Some(|_, _, _| 0),
+    "_StringEqual" => Some(|_, _, _| 0),
+    "_PrintInt" => Some(|i, _, _| (print!("{:?}", i as i32), 0).1),
+    "_PrintString" => Some(|_, _, _| 0),
+    "_PrintBool" => Some(|b, _, _| (print!("{:?}", b != 0), 0).1),
+    "_Halt" => Some(|_, _, _| HALT_CODE),
+    _ => None
+  }
 }

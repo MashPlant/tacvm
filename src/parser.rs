@@ -125,12 +125,14 @@ pub fn func(i: Span) -> IResult<RawFunc> {
   Ok((i, RawFunc { name, line: i.line, code }))
 }
 
-pub fn vtbl_slot(i: Span) -> IResult<RawVTblSlot> {
+pub fn vtbl_slot<'a>(i: Span<'a>) -> IResult<RawVTblSlot<'a>> {
+  use RawVTblSlotKind::*;
+  let new = |kind: RawVTblSlotKind<'a>| RawVTblSlot { line: i.line, kind };
   alt((
-    map(str, |s| RawVTblSlot::String(unescape(s).unwrap().into())),
-    map(tag(EMPTY), |_| RawVTblSlot::VTblRef(None)),
-    map(terminated(id, tuple((space0, tag(";")))), |name| RawVTblSlot::FuncRef(name)),
-    map(id, |name| RawVTblSlot::VTblRef(Some(name))),
+    map(str, move |s| new(String(unescape(s).unwrap().into()))),
+    map(tag(EMPTY), move |_| new(VTblRef(None))),
+    map(terminated(id, tuple((space0, tag(";")))), move |name| new(FuncRef(name))),
+    map(id, move |name| new(VTblRef(Some(name)))),
   ))(i)
 }
 
