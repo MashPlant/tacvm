@@ -85,7 +85,7 @@ pub fn call(i: Span) -> IResult<CallKind> {
 
 pub fn inst<'a>(i: Span<'a>) -> IResult<'a, RawInst> {
   use RawInstKind::*;
-  let new = |kind: RawInstKind<'a>| RawInst { line: i.line, kind };
+  let new = |kind: RawInstKind<'a>| RawInst { line: i.line, code: "", kind };
   alt((
     flat_map(tuple((reg, space0, tag("="), space0)), move |(d, _, _, _)| cut(alt((
       map(tuple((tag("("), space0, operand, space0, bin_op, space0, operand, space0, tag(")"))), move |(_, _, l, _, op, _, r, _, _)| new(Bin(op, d, l, r))),
@@ -108,7 +108,10 @@ pub fn inst<'a>(i: Span<'a>) -> IResult<'a, RawInst> {
                             space0, branch)))), move |(_, _, r, _, z, _, _, _, _, _, l)| new(B(r, z.fragment == "==", l))),
     map(tuple((label, space0, tag(":"))), move |(l, _, _)| new(Label(l))),
     map(tuple((mem, space0, tag("="), space0, operand)), move |((base, off), _, _, _, r)| new(Store(r, base, off))),
-  ))(i)
+  ))(i).map(|(rem, mut inst)| {
+    inst.code = &i.fragment[0..rem.offset - i.offset];
+    (rem, inst)
+  })
 }
 
 // their are too many traits for I to implement... just use a specific type here for convenience

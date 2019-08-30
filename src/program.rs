@@ -38,6 +38,7 @@ pub struct RawFunc<'a> {
 #[derive(Debug, Clone)]
 pub struct RawInst<'a> {
   pub line: u32,
+  pub code: &'a str,
   pub kind: RawInstKind<'a>,
 }
 

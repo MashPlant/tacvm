@@ -7,7 +7,8 @@ fn main() {
   match program(Span::new(code)) {
     Ok((_, p)) => match Program::new(&p) {
       Ok(p) => {
-        println!("{:?}", VM::new(&p).run(RunConfig { inst_limit: 100000, stack_limit: !0 }))
+        let mut vm = VM::new(&p);
+        println!("{:?}", vm.run(&mut RunConfig::default_io(100000, !0, true)));
       }
       Err(e) => { println!("{}", e); }
     }

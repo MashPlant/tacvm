@@ -1,6 +1,6 @@
 #[derive(Debug)]
 pub enum Error {
-  // actually Halt is not an error, but they can be handled in a similar way
+  // program calls _Halt explicitly
   Halt,
   // base % 4 != 0 or off % 4 != 0 or allocate size % 4 != 0
   UnalignedMem,
@@ -14,8 +14,10 @@ pub enum Error {
   StrOutOfRange,
   // instruction fetch out of range
   IFOutOfRange,
-  // call stack exceeds a given level
+  // call stack exceeds a given level(specified in RunConfig)
   StackOverflow,
+  // instructions exceeds a given number(specified in RunConfig)
+  TLE,
   // the number of function arguments > function's stack size
   TooMuchArg,
   // div 0 or mod 0

@@ -1,6 +1,4 @@
-#[macro_use]
-extern crate text_io;
-
+mod util;
 pub mod parser;
 pub mod program;
 pub mod mem;
