@@ -157,19 +157,9 @@ impl VM<'_> {
     for (idx, f) in self.stack.iter().enumerate() {
       let func = &self.program.func[f.func as usize];
       write!(wt, "  - function: `{}`, ", func.raw_func.name)?;
-      if let Some(raw) = func.raw_code.get((f.pc as usize).wrapping_sub(1)) {
-        writeln!(wt, "line: {}, code: `{}`", raw.line, raw.code)?;
-      } else {
-        assert_eq!(idx + 1, self.stack.len()); // this should only be the last level of function
-      }
-    }
-    if let Some(f) = self.stack.last() {
-      let func = &self.program.func[f.func as usize];
-      if let Some(raw) = func.raw_code.get(self.pc as usize) {
-        writeln!(wt, "line: {}, code: `{}`", raw.line, raw.code)?;
-      } else {
-        writeln!(wt, "{:?}", Error::IFOutOfRange)?;
-      }
+      let pc = if idx + 1 == self.stack.len() { self.pc } else { f.pc - 1 };
+      let raw = func.raw_code[pc as usize];
+      writeln!(wt, "line: {}, code: `{}`", raw.line, raw.code)?;
     }
     Ok(())
   }
@@ -183,7 +173,7 @@ pub fn intrinsic(name: &str) -> Option<IntrinsicFn> {
     "_ReadLine" => Some(|_, _, mem, cfg| {
       let mut s = String::new();
       cfg.vm_input.read_line(&mut s).map_err(|_| Error::IO)?;
-      Ok(mem.define_str(&s))
+      Ok(mem.define_str(s.trim_end_matches('\n')))
     }),
     "_ReadInt" => Some(|_, _, _, cfg| Ok(cfg.vm_input.next_int().ok_or(Error::IO)?)),
     "_StringEqual" => Some(|l, r, mem, _| Ok((mem.get_str(l)? == mem.get_str(r)?) as i32)),

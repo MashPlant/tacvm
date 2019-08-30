@@ -132,12 +132,12 @@ impl<'a> Program<'a> {
     let (mut vtbl_set, mut func_set, mut str_pool) = (IndexSet::new(), IndexSet::new(), IndexSet::<&str>::new());
     for v in &raw.vtbl {
       if !vtbl_set.insert(v.name) {
-        return Err(format!("Line {}: duplicate vtbl `{}`.", v.line, v.name));
+        return Err(format!("line {}: duplicate vtbl `{}`", v.line, v.name));
       }
     }
     for f in &raw.func {
       if !func_set.insert(f.name) {
-        return Err(format!("Line {}: duplicate function `{}`.", f.line, f.name));
+        return Err(format!("line {}: duplicate function `{}`", f.line, f.name));
       }
     }
     let mut vtbl = Vec::with_capacity(raw.vtbl.len());
@@ -147,11 +147,11 @@ impl<'a> Program<'a> {
         data.push(match &s.kind {
           RawVTblSlotKind::Empty => VTblSlot::Empty,
           &RawVTblSlotKind::VTblRef(v) => if let Some((idx, _)) = vtbl_set.get_full(v) { VTblSlot::VTblRef(idx as u32) } else {
-            return Err(format!("Line {}: no such vtbl `{}`.", s.line, v));
+            return Err(format!("line {}: no such vtbl `{}`", s.line, v));
           }
           RawVTblSlotKind::String(s) => VTblSlot::String(str_pool.insert_full(s).0 as u32),
           &RawVTblSlotKind::FuncRef(f) => if let Some((idx, _)) = func_set.get_full(f) { VTblSlot::FuncRef(idx as u32) } else {
-            return Err(format!("Line {}: no such function `{}`.", s.line, f));
+            return Err(format!("line {}: no such function `{}`", s.line, f));
           }
         });
       }
@@ -184,7 +184,7 @@ impl<'a> Program<'a> {
         use Operand::*;
         use Inst::*;
         let chk_label = |l: u32| label_set.get(l as usize).map(|l| *l).ok_or_else(||
-          format!("Line {}: no such label `_L{}` in function `{}`.", i.line, l, f.name));
+          format!("line {}: no such label `_L{}` in function `{}`", i.line, l, f.name));
         let inst = match &i.kind {
           &RawInstKind::Bin(op, d, l, r) => {
             upd(d);
@@ -193,7 +193,7 @@ impl<'a> Program<'a> {
               (Reg(l), Operand::Const(r)) => BinRC(op, d, upd(l), r),
               (Const(l), Reg(r)) => BinCR(op, d, l, upd(r)),
               (Const(l), Const(r)) =>
-                Li(d, if let Some(i) = op.eval(l, r) { i } else { return Err(format!("Line {}: attempt to divide or mod by 0.", i.line)); }),
+                Li(d, if let Some(i) = op.eval(l, r) { i } else { return Err(format!("line {}: attempt to divide or mod by 0", i.line)); }),
             }
           }
           &RawInstKind::Un(op, d, r) => match r {
@@ -206,7 +206,7 @@ impl<'a> Program<'a> {
             code.push(match c {
               CallKind::Reg(r) => Call(Operand::Reg(upd(r))),
               CallKind::Named(name) => if let Some(i) = intrinsic(name) { Intrinsic(i) } else {
-                if let Some((idx, _)) = func_set.get_full(name) { Call(Operand::Const(idx as i32)) } else { return Err(format!("Line {}: no such function `{}`.", i.line, name)); }
+                if let Some((idx, _)) = func_set.get_full(name) { Call(Operand::Const(idx as i32)) } else { return Err(format!("line {}: no such function `{}`", i.line, name)); }
               }
             });
             raw_code.push(i);
@@ -234,7 +234,7 @@ impl<'a> Program<'a> {
           &RawInstKind::Load(d, base, off) => Load(upd(d), upd(base), off),
           &RawInstKind::Store(r, base, off) => match r { Reg(r) => StoreR(upd(r), base, off), Const(r) => StoreC(r, base, off) }
           RawInstKind::LStr(d, s) => LStr(upd(*d), str_pool.insert_full(s).0 as u32),
-          &RawInstKind::LVTbl(d, v) => LVTbl(upd(d), if let Some((idx, _)) = vtbl_set.get_full(v) { idx as u32 } else { return Err(format!("Line {}: no such vtbl `{}`.", i.line, v)); })
+          &RawInstKind::LVTbl(d, v) => LVTbl(upd(d), if let Some((idx, _)) = vtbl_set.get_full(v) { idx as u32 } else { return Err(format!("line {}: no such vtbl `{}`", i.line, v)); })
         };
         idx += 1; // Call and Label won't reach here
         code.push(inst);
@@ -243,7 +243,7 @@ impl<'a> Program<'a> {
       func.push(Func { stack_size: max_stack + 1, code, raw_code, raw_func: f })
     }
     let entry = if let Some((idx, _)) = func_set.get_full(MAIN) { idx as u32 } else {
-      return Err(format!("No function named `{}` found.", MAIN));
+      return Err(format!("No function named `{}` found", MAIN));
     };
     Ok(Program { entry, vtbl, func, str_pool })
   }

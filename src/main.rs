@@ -32,9 +32,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut cfg = RunConfig { inst_limit, stack_limit, print_stacktrace, vm_input, vm_output, info_output };
         VM::new(&p).run(&mut cfg)?;
       }
-      Err(e) => writeln!(info_output, "{}", e)?,
+      Err(e) => writeln!(info_output, "Parser error: {}.", e)?,
     }
-    Err(e) => eprintln!("{:?}", e),
+    Err(e) => match e {
+      nom::Err::Error((span, _)) | nom::Err::Failure((span, _)) =>
+        writeln!(info_output, "Parser error: syntax error at {}:{}.", span.line, span.get_column())?,
+      nom::Err::Incomplete(_) => unreachable!(), // we didn't use nom's stream mode, won't have Incomplete
+    }
   }
   Ok(())
 }
