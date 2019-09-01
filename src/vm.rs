@@ -158,8 +158,11 @@ impl VM<'_> {
       let func = &self.program.func[f.func as usize];
       write!(wt, "  - function: `{}`, ", func.raw_func.name)?;
       let pc = if idx + 1 == self.stack.len() { self.pc } else { f.pc - 1 };
-      let raw = func.raw_code[pc as usize];
-      writeln!(wt, "line: {}, code: `{}`", raw.line, raw.code)?;
+      if let Some(raw) = func.raw_code.get(pc as usize) {
+        writeln!(wt, "line: {}, code: `{}`", raw.line, raw.code)?;
+      } else {
+        writeln!(wt, "IFOutOfRange")?;
+      }
     }
     Ok(())
   }
