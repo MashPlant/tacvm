@@ -20,13 +20,11 @@ pub const LABEL_PREFIX: &str = "_L";
 
 use std::io::{self, BufRead, Write};
 
-pub fn work(code: &str, inst_limit: u32, stack_limit: u32, print_stacktrace: bool, vm_input: Box<dyn BufRead>, vm_output: Box<dyn Write>, info_output: Box<dyn Write>) -> io::Result<()>{
-  let mut cfg = vm::RunConfig { inst_limit, stack_limit, print_stacktrace, vm_input, vm_output, info_output };
+pub fn work(code: &str, inst_limit: u32, stack_limit: u32, stacktrace: bool, inst_count: bool, vm_input: Box<dyn BufRead>, vm_output: Box<dyn Write>, info_output: Box<dyn Write>) -> io::Result<()> {
+  let mut cfg = vm::RunConfig { inst_limit, stack_limit, stacktrace, inst_count, vm_input, vm_output, info_output };
   match parser::program(parser::Span::new(&code)) {
     Ok((_, p)) => match program::Program::new(&p) {
-      Ok(p) => {
-        vm::VM::new(&p).run(&mut cfg)?;
-      }
+      Ok(p) => vm::VM::new(&p).run(&mut cfg)?,
       Err(e) => writeln!(cfg.info_output, "Parser error: {}.", e)?,
     }
     Err(e) => match e {
