@@ -22,6 +22,6 @@ pub enum Error {
   TooMuchArg,
   // div 0 or mod 0
   Div0,
-  // now only reading things from console will trigger this
+  // fails in reading or writing things
   IO,
 }

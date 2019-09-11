@@ -56,7 +56,7 @@ impl VM<'_> {
     for (&addr, v) in vtbl_addr.iter().zip(p.vtbl.iter()) {
       for (idx, &slot) in v.iter().enumerate() {
         let data = match slot {
-          VTblSlot::Empty => 0,
+          VTblSlot::Int(i) => i,
           VTblSlot::VTblRef(v) => vtbl_addr[v as usize] as i32,
           VTblSlot::String(s) => str_addr[s as usize],
           VTblSlot::FuncRef(f) => f as i32,

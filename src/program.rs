@@ -22,7 +22,7 @@ pub struct RawVTblSlot<'a> {
 
 #[derive(Debug, Clone)]
 pub enum RawVTblSlotKind<'a> {
-  Empty,
+  Int(i32),
   VTblRef(&'a str),
   String(Box<str>),
   FuncRef(&'a str),
@@ -114,7 +114,7 @@ pub struct Program<'a> {
 
 #[derive(Copy, Clone)]
 pub enum VTblSlot {
-  Empty,
+  Int(i32),
   VTblRef(u32),
   String(u32),
   FuncRef(u32),
@@ -145,7 +145,7 @@ impl<'a> Program<'a> {
       let mut data = Vec::with_capacity(v.data.len());
       for s in &v.data {
         data.push(match &s.kind {
-          RawVTblSlotKind::Empty => VTblSlot::Empty,
+          &RawVTblSlotKind::Int(i) => VTblSlot::Int(i),
           &RawVTblSlotKind::VTblRef(v) => if let Some((idx, _)) = vtbl_set.get_full(v) { VTblSlot::VTblRef(idx as u32) } else {
             return Err(format!("line {}: no such vtbl `{}`", s.line, v));
           }
