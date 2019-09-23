@@ -14,6 +14,8 @@ pub enum Error {
   StrOutOfRange,
   // instruction fetch out of range
   IFOutOfRange,
+  // call a register which is not a valid function id
+  CallOutOfRange,
   // call stack exceeds a given level(specified in RunConfig)
   StackOverflow,
   // instructions exceeds a given number(specified in RunConfig)

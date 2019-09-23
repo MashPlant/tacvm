@@ -114,7 +114,7 @@ impl VM<'_> {
         }
         Call(f) => {
           let f = match f { Operand::Reg(r) => stk[r as usize], Operand::Const(c) => c };
-          func = &p.func[f as usize];
+          func = p.func.get(f as usize).ok_or(Error::CallOutOfRange)?;
           if func.stack_size < arg.len() as u32 { return Err(Error::TooMuchArg); }
           (frame.pc = self.pc, self.pc = 0);
           if cfg.stack_limit < self.stack.len() as u32 { return Err(Error::StackOverflow); }
@@ -123,9 +123,7 @@ impl VM<'_> {
           stk[0..arg.len()].copy_from_slice(&arg);
           arg.clear();
         }
-        GetRet(d) => {
-          stk[d as usize] = ret;
-        }
+        GetRet(d) => stk[d as usize] = ret,
         Ret(r) => {
           if let Some(r) = r {
             ret = match r { Operand::Reg(r) => stk[r as usize], Operand::Const(c) => c };
