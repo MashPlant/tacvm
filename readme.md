@@ -4,12 +4,12 @@ tacvm从文本中parse出tac语句，然后经过一定转换后执行。目前�
 
 从`examples/matrix.tac`文件中可以基本看出tac文件的大致格式，这里只大致讲一下tac中不能完全体现出来的内容：
 
-- 程序有两种顶层元素，即`VTBL`和`FUNCTION`，括号里的标识符可以使用字母，数字，`.`和`_`
-- `VTBL`和`FUNCTION`的内容(大括号里的内容)都是用换行分隔的，对空格缩进不敏感，但是对换行敏感，这其中不允许出现空白的一行
-- `VTBL`中可以出现以下内容
+- 程序有两种顶层元素，即`VTBL`和`FUNC`，括号里的标识符可以使用字母，数字，`.`和`_`
+- `VTBL`和`FUNC`的内容(大括号里的内容)都是用换行分隔的，对空格缩进不敏感，但是对换行敏感(不允许出现空白的一行)
+- `VTBL`中可以出现以下内容(也就是四种可以赋值给变量的右端项常量)
   - `"string"`，填入对应的字符串指针
   - `int`，填入对应整数
-  - `FUNCTION<identifier>`，填入`identifier`对应的函数指针
+  - `FUNC<identifier>`，填入`identifier`对应的函数指针
   - `VTBL<identifier>`，填入`identifier`对应的虚表指针
 - tac函数的参数传递过程是这样的：
   - 调用者使用`parm`指令把参数存入一个临时的空间中
@@ -35,6 +35,8 @@ pub enum Error {
   StrOutOfRange,
   // instruction fetch out of range
   IFOutOfRange,
+  // call a register which is not a valid function id
+  CallOutOfRange,
   // call stack exceeds a given level(specified in RunConfig)
   StackOverflow,
   // instructions exceeds a given number(specified in RunConfig)

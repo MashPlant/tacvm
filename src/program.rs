@@ -1,4 +1,5 @@
 use indexmap::IndexSet;
+use std::collections::HashMap;
 use crate::{vm::{intrinsic, IntrinsicFn}, MAIN};
 
 #[derive(Debug, Clone)]
@@ -57,6 +58,7 @@ pub enum RawInstKind<'a> {
   Store(Operand, u32, i32),
   LStr(u32, Box<str>),
   LVTbl(u32, &'a str),
+  LFunc(u32, &'a str),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -105,7 +107,7 @@ impl UnOp {
 }
 
 pub struct Program<'a> {
-  // entry function index
+  // entry func index
   pub entry: u32,
   pub vtbl: Vec<Box<[VTblSlot]>>,
   pub func: Vec<Func<'a>>,
@@ -137,7 +139,7 @@ impl<'a> Program<'a> {
     }
     for f in &raw.func {
       if !func_set.insert(f.name) {
-        return Err(format!("line {}: duplicate function `{}`", f.line, f.name));
+        return Err(format!("line {}: duplicate func `{}`", f.line, f.name));
       }
     }
     let mut vtbl = Vec::with_capacity(raw.vtbl.len());
@@ -151,14 +153,14 @@ impl<'a> Program<'a> {
           }
           RawVTblSlotKind::String(s) => VTblSlot::String(str_pool.insert_full(s).0 as u32),
           &RawVTblSlotKind::FuncRef(f) => if let Some((idx, _)) = func_set.get_full(f) { VTblSlot::FuncRef(idx as u32) } else {
-            return Err(format!("line {}: no such function `{}`", s.line, f));
+            return Err(format!("line {}: no such func `{}`", s.line, f));
           }
         });
       }
       vtbl.push(data.into());
     }
     let mut func = Vec::with_capacity(raw.func.len());
-    let mut label_set = Vec::new();
+    let mut label_set = HashMap::new();
     for f in &raw.func {
       let (mut code, mut raw_code) = (Vec::new(), Vec::new());
       label_set.clear();
@@ -166,11 +168,7 @@ impl<'a> Program<'a> {
       for i in &f.code {
         idx += match &i.kind {
           &RawInstKind::Label(l) => {
-            let l = l as usize;
-            if label_set.len() <= l {
-              label_set.resize(l + 1, 0);
-            }
-            label_set[l] = idx;
+            if label_set.insert(l, idx).is_some() { return Err(format!("line {}: duplicate label `_L{}` in func `{}`", i.line, l, f.name)); }
             0
           }
           &RawInstKind::Call(d, _) => if d.is_some() { 2 } else { 1 },
@@ -183,8 +181,7 @@ impl<'a> Program<'a> {
       for i in &f.code {
         use Operand::*;
         use Inst::*;
-        let chk_label = |l: u32| label_set.get(l as usize).map(|l| *l).ok_or_else(||
-          format!("line {}: no such label `_L{}` in function `{}`", i.line, l, f.name));
+        let chk_label = |l: u32| label_set.get(&l).cloned().ok_or_else(|| format!("line {}: no such label `_L{}` in func `{}`", i.line, l, f.name));
         let inst = match &i.kind {
           &RawInstKind::Bin(op, d, l, r) => {
             upd(d);
@@ -206,7 +203,7 @@ impl<'a> Program<'a> {
             code.push(match c {
               CallKind::Reg(r) => Call(Operand::Reg(upd(r))),
               CallKind::Named(name) => if let Some(i) = intrinsic(name) { Intrinsic(i) } else {
-                if let Some((idx, _)) = func_set.get_full(name) { Call(Operand::Const(idx as i32)) } else { return Err(format!("line {}: no such function `{}`", i.line, name)); }
+                if let Some((idx, _)) = func_set.get_full(name) { Call(Operand::Const(idx as i32)) } else { return Err(format!("line {}: no such func `{}`", i.line, name)); }
               }
             });
             raw_code.push(i);
@@ -234,7 +231,8 @@ impl<'a> Program<'a> {
           &RawInstKind::Load(d, base, off) => Load(upd(d), upd(base), off),
           &RawInstKind::Store(r, base, off) => match r { Reg(r) => StoreR(upd(r), base, off), Const(r) => StoreC(r, base, off) }
           RawInstKind::LStr(d, s) => LStr(upd(*d), str_pool.insert_full(s).0 as u32),
-          &RawInstKind::LVTbl(d, v) => LVTbl(upd(d), if let Some((idx, _)) = vtbl_set.get_full(v) { idx as u32 } else { return Err(format!("line {}: no such vtbl `{}`", i.line, v)); })
+          &RawInstKind::LVTbl(d, v) => LVTbl(upd(d), if let Some((idx, _)) = vtbl_set.get_full(v) { idx as u32 } else { return Err(format!("line {}: no such vtbl `{}`", i.line, v)); }),
+          &RawInstKind::LFunc(d, v) => Li(upd(d), if let Some((idx, _)) = func_set.get_full(v) { idx as i32 } else { return Err(format!("line {}: no such vtbl `{}`", i.line, v)); }),
         };
         idx += 1; // Call and Label won't reach here
         code.push(inst);
@@ -243,7 +241,7 @@ impl<'a> Program<'a> {
       func.push(Func { stack_size: max_stack + 1, code, raw_code, raw_func: f })
     }
     let entry = if let Some((idx, _)) = func_set.get_full(MAIN) { idx as u32 } else {
-      return Err(format!("No function named `{}` found", MAIN));
+      return Err(format!("no func named `{}` found", MAIN));
     };
     Ok(Program { entry, vtbl, func, str_pool })
   }

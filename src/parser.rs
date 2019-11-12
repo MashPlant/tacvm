@@ -1,7 +1,8 @@
-use nom::{branch::alt, bytes::complete::{escaped, tag, take_while1}, character::complete::{none_of, digit1, space0, one_of, space1, multispace0, newline}, combinator::{cut, map, map_res, flat_map}, sequence::{preceded, terminated, tuple}, multi::{separated_list, fold_many0}};
+use nom::{branch::alt, bytes::complete::{escaped, tag, take_while1}, character::complete::{none_of, digit1, space0, one_of, space1, multispace0, newline}, combinator::{cut, map, map_res, flat_map}, sequence::{preceded, terminated, tuple}, multi::{separated_list, fold_many1}};
 use nom_locate::LocatedSpan;
 use unescape::unescape;
-use crate::{program::*, VTBL, EMPTY, FUNCTION, CALL, PARAM, RETURN, REG_PREFIX, LABEL_PREFIX, BRANCH};
+use crate::{program::*, VTBL, FUNC, CALL, PARAM, RETURN, REG_PREFIX, LABEL_PREFIX, BRANCH};
+use nom::combinator::opt;
 
 pub type Span<'a> = LocatedSpan<&'a str>;
 
@@ -27,10 +28,7 @@ pub fn bin_op(i: Span) -> IResult<BinOp> {
 }
 
 pub fn un_op(i: Span) -> IResult<UnOp> {
-  alt((
-    map(tag("-"), |_| UnOp::Neg),
-    map(tag("!"), |_| UnOp::Not),
-  ))(i)
+  alt((map(tag("-"), |_| UnOp::Neg), map(tag("!"), |_| UnOp::Not), ))(i)
 }
 
 pub fn int(i: Span) -> IResult<i32> {
@@ -64,10 +62,7 @@ pub fn branch(i: Span) -> IResult<u32> {
 }
 
 pub fn operand(i: Span) -> IResult<Operand> {
-  alt((
-    map(int, Operand::Const),
-    map(reg, Operand::Reg),
-  ))(i)
+  alt((map(int, Operand::Const), map(reg, Operand::Reg), ))(i)
 }
 
 pub fn mem(i: Span) -> IResult<(u32, i32)> {
@@ -77,10 +72,7 @@ pub fn mem(i: Span) -> IResult<(u32, i32)> {
 }
 
 pub fn call(i: Span) -> IResult<CallKind> {
-  preceded(tuple((tag(CALL), space0)), cut(alt((
-    map(reg, CallKind::Reg),
-    map(id, CallKind::Named),
-  ))))(i)
+  preceded(tuple((tag(CALL), space0)), cut(alt((map(reg, CallKind::Reg), map(id, CallKind::Named), ))))(i)
 }
 
 pub fn inst<'a>(i: Span<'a>) -> IResult<'a, RawInst> {
@@ -94,14 +86,12 @@ pub fn inst<'a>(i: Span<'a>) -> IResult<'a, RawInst> {
       map(call, move |c| new(Call(Some(d), c))),
       map(str, move |r| new(LStr(d, unescape(r).unwrap().into()))), // must be valid here
       map(tuple((tag(VTBL), space0, tag("<"), id, tag(">"))), move |(_, _, _, name, _)| new(LVTbl(d, name))),
+      map(tuple((tag(FUNC), space0, tag("<"), id, tag(">"))), move |(_, _, _, name, _)| new(LFunc(d, name))),
       map(mem, move |(base, off)| new(Load(d, base, off))),
     )))),
     map(preceded(tuple((tag(PARAM), space1)), cut(operand)), move |r| new(Param(r))),
     map(call, move |c| new(Call(None, c))),
-    map(preceded(tuple((tag(RETURN), space0)), cut(alt((
-      map(tag(EMPTY), |_| None),
-      map(operand, |r| Some(r)),
-    )))), move |r| new(Ret(r))),
+    map(preceded(tuple((tag(RETURN), space0)), cut(opt(operand))), move |r| new(Ret(r))),
     map(branch, move |l| new(J(l))),
     map(preceded(tuple((tag("if"), space0)),
                  cut(tuple((tag("("), space0, operand, space0, alt((tag("!="), tag("=="))), space0, tag("0"), space0, tag(")"),
@@ -122,8 +112,8 @@ fn curly_braced<'a, O>(parser: impl Fn(Span<'a>) -> nom::IResult<Span<'a>, O>) -
 }
 
 pub fn func(i: Span) -> IResult<RawFunc> {
-  let (i, name) = preceded(tuple((tag(FUNCTION), space0, tag("("), space0)),
-                           terminated(id, tuple((space0, tag(")"), multispace0))))(i)?;
+  let (i, name) = preceded(tuple((tag(FUNC), space0, tag("<"), space0)),
+                           terminated(id, tuple((space0, tag(">"), multispace0))))(i)?;
   let (i, code) = cut(curly_braced(inst))(i)?;
   Ok((i, RawFunc { name, line: i.line, code }))
 }
@@ -135,30 +125,25 @@ pub fn vtbl_slot<'a>(i: Span<'a>) -> IResult<RawVTblSlot<'a>> {
     map(str, move |s| new(String(unescape(s).unwrap().into()))),
     map(int, move |i| new(Int(i))),
     map(tuple((tag(VTBL), space0, tag("<"), id, tag(">"))), move |(_, _, _, name, _)| new(VTblRef(name))),
-    map(tuple((tag(FUNCTION), space0, tag("<"), id, tag(">"))), move |(_, _, _, name, _)| new(FuncRef(name))),
+    map(tuple((tag(FUNC), space0, tag("<"), id, tag(">"))), move |(_, _, _, name, _)| new(FuncRef(name))),
   ))(i)
 }
 
 pub fn vtbl(i: Span) -> IResult<RawVTbl> {
-  let (i, name) = preceded(tuple((tag(VTBL), space0, tag("("), space0)),
-                           terminated(id, tuple((space0, tag(")"), multispace0))))(i)?;
+  let (i, name) = preceded(tuple((tag(VTBL), space0, tag("<"), space0)),
+                           terminated(id, tuple((space0, tag(">"), multispace0))))(i)?;
   let (i, data) = cut(curly_braced(vtbl_slot))(i)?;
   Ok((i, RawVTbl { name, line: i.line, data }))
 }
 
 pub fn program(i: Span) -> IResult<RawProgram> {
-  enum ProgramItem<'a> {
-    Func(RawFunc<'a>),
-    VTbl(RawVTbl<'a>),
-  }
-  fold_many0(preceded(multispace0, alt((
+  enum ProgramItem<'a> { Func(RawFunc<'a>), VTbl(RawVTbl<'a>) }
+  use ProgramItem::*;
+  fold_many1(preceded(multispace0, alt((
     map(func, ProgramItem::Func),
     map(vtbl, ProgramItem::VTbl),
   ))), RawProgram { vtbl: vec![], func: vec![] }, |mut p, r| {
-    match r {
-      ProgramItem::Func(f) => p.func.push(f),
-      ProgramItem::VTbl(v) => p.vtbl.push(v),
-    }
+    match r { Func(f) => p.func.push(f), VTbl(v) => p.vtbl.push(v), }
     p
   })(i)
 }

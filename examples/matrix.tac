@@ -1,70 +1,70 @@
-VTBL(_Matrix) {
+VTBL<_Matrix> {
     0
     "Matrix"
-    FUNCTION<_Matrix.Init>
-    FUNCTION<_Matrix.Set>
-    FUNCTION<_Matrix.Get>
-    FUNCTION<_Matrix.PrintMatrix>
-    FUNCTION<_Matrix.SeedMatrix>
+    FUNC<_Matrix.Init>
+    FUNC<_Matrix.Set>
+    FUNC<_Matrix.Get>
+    FUNC<_Matrix.PrintMatrix>
+    FUNC<_Matrix.SeedMatrix>
 }
 
-VTBL(_DenseMatrix) {
+VTBL<_DenseMatrix> {
     VTBL<_Matrix>
     "DenseMatrix"
-    FUNCTION<_DenseMatrix.Init>
-    FUNCTION<_DenseMatrix.Set>
-    FUNCTION<_DenseMatrix.Get>
-    FUNCTION<_Matrix.PrintMatrix>
-    FUNCTION<_Matrix.SeedMatrix>
+    FUNC<_DenseMatrix.Init>
+    FUNC<_DenseMatrix.Set>
+    FUNC<_DenseMatrix.Get>
+    FUNC<_Matrix.PrintMatrix>
+    FUNC<_Matrix.SeedMatrix>
 }
 
-VTBL(_SparseItem) {
+VTBL<_SparseItem> {
     0
     "SparseItem"
-    FUNCTION<_SparseItem.Init>
-    FUNCTION<_SparseItem.GetNext>
-    FUNCTION<_SparseItem.GetY>
-    FUNCTION<_SparseItem.GetData>
-    FUNCTION<_SparseItem.SetData>
+    FUNC<_SparseItem.Init>
+    FUNC<_SparseItem.GetNext>
+    FUNC<_SparseItem.GetY>
+    FUNC<_SparseItem.GetData>
+    FUNC<_SparseItem.SetData>
 }
 
-VTBL(_SparseMatrix) {
+VTBL<_SparseMatrix> {
     VTBL<_Matrix>
     "SparseMatrix"
-    FUNCTION<_SparseMatrix.Init>
-    FUNCTION<_SparseMatrix.Set>
-    FUNCTION<_SparseMatrix.Get>
-    FUNCTION<_Matrix.PrintMatrix>
-    FUNCTION<_Matrix.SeedMatrix>
-    FUNCTION<_SparseMatrix.Find>
+    FUNC<_SparseMatrix.Init>
+    FUNC<_SparseMatrix.Set>
+    FUNC<_SparseMatrix.Get>
+    FUNC<_Matrix.PrintMatrix>
+    FUNC<_Matrix.SeedMatrix>
+    FUNC<_SparseMatrix.Find>
 }
 
-VTBL(_Main) {
+VTBL<_Main> {
     0
     "Main"
 }
 
-FUNCTION(_Matrix_New) {
+FUNC<_Matrix_New> {
     parm 4
     _T0 = call _Alloc
-    _T1 = VTBL <_Matrix>
+    _T1 = VTBL<_Matrix>
     *(_T0 + 0) = _T1
     return _T0
 }
 
-FUNCTION(_DenseMatrix_New) {
+FUNC<_DenseMatrix_New> {
     parm 8
     _T0 = call _Alloc
-    _T1 = VTBL <_DenseMatrix>
+    _T1 = VTBL<_DenseMatrix>
     *(_T0 + 0) = _T1
     *(_T0 + 4) = 0
     return _T0
 }
 
-FUNCTION(_SparseItem_New) {
+FUNC<_SparseItem_New> {
     parm 16
     _T0 = call _Alloc
-    _T1 = VTBL <_SparseItem>
+    _T1 = VTBL<_SparseItem>
     *(_T0 + 0) = _T1
     *(_T0 + 4) = 0
     *(_T0 + 8) = 0
@@ -72,36 +72,36 @@ FUNCTION(_SparseItem_New) {
     return _T0
 }
 
-FUNCTION(_SparseMatrix_New) {
+FUNC<_SparseMatrix_New> {
     parm 8
     _T0 = call _Alloc
-    _T1 = VTBL <_SparseMatrix>
+    _T1 = VTBL<_SparseMatrix>
     *(_T0 + 0) = _T1
     *(_T0 + 4) = 0
     return _T0
 }
 
-FUNCTION(_Main_New) {
+FUNC<_Main_New> {
     parm 4
     _T0 = call _Alloc
-    _T1 = VTBL <_Main>
+    _T1 = VTBL<_Main>
     *(_T0 + 0) = _T1
     return _T0
 }
 
-FUNCTION(_Matrix.Init) {
-    return <empty>
+FUNC<_Matrix.Init> {
+    return
 }
 
-FUNCTION(_Matrix.Set) {
-    return <empty>
+FUNC<_Matrix.Set> {
+    return
 }
 
-FUNCTION(_Matrix.Get) {
+FUNC<_Matrix.Get> {
     return 0
 }
 
-FUNCTION(_Matrix.PrintMatrix) {
+FUNC<_Matrix.PrintMatrix> {
     _T1 =  0
     branch _L5
     _L1:
@@ -124,18 +124,18 @@ FUNCTION(_Matrix.PrintMatrix) {
     _L3:
     _T7 = (_T2 < 10)
     if (_T7 != 0) branch _L2
-    _T8 = (_T1 + 1)
-    _T1 =  _T8
-    _T9 = "\n"
-    parm _T9
+    _T8 = "\n"
+    parm _T8
     call _PrintString
+    _T9 = (_T1 + 1)
+    _T1 =  _T9
     _L5:
     _T10 = (_T1 < 10)
     if (_T10 != 0) branch _L1
-    return <empty>
+    return
 }
 
-FUNCTION(_Matrix.SeedMatrix) {
+FUNC<_Matrix.SeedMatrix> {
     _T1 =  0
     branch _L5
     _L1:
@@ -192,110 +192,110 @@ FUNCTION(_Matrix.SeedMatrix) {
     parm 7
     parm 7
     call _T20
-    return <empty>
+    return
 }
 
-FUNCTION(_DenseMatrix.Init) {
-    _T1 =  0
+FUNC<_DenseMatrix.Init> {
     parm 44
-    _T6 = call _Alloc
-    _T4 = (_T6 + 44)
-    _T6 = (_T6 + 4)
+    _T4 = call _Alloc
+    _T2 = (_T4 + 44)
+    _T4 = (_T4 + 4)
     branch _L3
     _L2:
-    _T4 = (_T4 - 4)
-    *(_T4 + 0) = 0
+    _T2 = (_T2 - 4)
+    *(_T2 + 0) = 0
     _L3:
-    _T3 = (_T4 == _T6)
-    if (_T3 == 0) branch _L2
-    *(_T6 - 4) = 10
-    *(_T0 + 4) = _T6
+    _T1 = (_T2 == _T4)
+    if (_T1 == 0) branch _L2
+    *(_T4 - 4) = 10
+    *(_T0 + 4) = _T4
+    _T5 =  0
     branch _L13
     _L5:
     parm 44
-    _T10 = call _Alloc
-    _T8 = (_T10 + 44)
-    _T10 = (_T10 + 4)
+    _T9 = call _Alloc
+    _T7 = (_T9 + 44)
+    _T9 = (_T9 + 4)
     branch _L8
     _L7:
-    _T8 = (_T8 - 4)
-    *(_T8 + 0) = 0
+    _T7 = (_T7 - 4)
+    *(_T7 + 0) = 0
     _L8:
-    _T7 = (_T8 == _T10)
-    if (_T7 == 0) branch _L7
-    *(_T10 - 4) = 10
-    _T11 = *(_T0 + 4)
-    _T13 = *(_T11 - 4)
-    _T12 = (_T1 >= 0)
-    _T14 = (_T1 < _T13)
-    _T12 = (_T12 && _T14)
-    if (_T12 == 0) branch _L11
-    _T15 = (_T1 * 4)
-    _T15 = (_T15 + _T11)
-    *(_T15 + 0) = _T10
+    _T6 = (_T7 == _T9)
+    if (_T6 == 0) branch _L7
+    *(_T9 - 4) = 10
+    _T10 = *(_T0 + 4)
+    _T12 = *(_T10 - 4)
+    _T11 = (_T5 >= 0)
+    _T13 = (_T5 < _T12)
+    _T11 = (_T11 && _T13)
+    if (_T11 == 0) branch _L11
+    _T14 = (_T5 * 4)
+    _T14 = (_T14 + _T10)
+    *(_T14 + 0) = _T9
     branch _L12
     _L11:
-    _T16 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T16
+    _T15 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm _T15
     call _PrintString
     call _Halt
     _L12:
-    _T17 = (_T1 + 1)
-    _T1 =  _T17
+    _T16 = (_T5 + 1)
+    _T5 =  _T16
     _L13:
-    _T18 = (_T1 < 10)
-    if (_T18 != 0) branch _L5
-    _T1 =  0
+    _T17 = (_T5 < 10)
+    if (_T17 != 0) branch _L5
+    _T18 =  0
     branch _L25
     _L15:
-    _T2 =  0
+    _T19 =  0
     branch _L23
     _L16:
-    _T19 = *(_T0 + 4)
-    _T21 = *(_T19 - 4)
-    _T20 = (_T1 >= 0)
-    _T22 = (_T1 < _T21)
-    _T20 = (_T20 && _T22)
-    if (_T20 == 0) branch _L18
-    _T23 = (_T1 * 4)
-    _T23 = (_T23 + _T19)
-    _T24 = *(_T23 + 0)
+    _T20 = *(_T0 + 4)
+    _T22 = *(_T20 - 4)
+    _T21 = (_T18 >= 0)
+    _T23 = (_T18 < _T22)
+    _T21 = (_T21 && _T23)
+    if (_T21 == 0) branch _L18
+    _T24 = (_T18 * 4)
+    _T24 = (_T24 + _T20)
+    _T25 = *(_T24 + 0)
     branch _L19
     _L18:
-    _T25 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T25
+    _T26 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm _T26
     call _PrintString
     call _Halt
     _L19:
-    _T27 = *(_T24 - 4)
-    _T26 = (_T2 >= 0)
-    _T28 = (_T2 < _T27)
-    _T26 = (_T26 && _T28)
-    if (_T26 == 0) branch _L21
-    _T29 = (_T2 * 4)
-    _T29 = (_T29 + _T24)
-    *(_T29 + 0) = 0
+    _T28 = *(_T25 - 4)
+    _T27 = (_T19 >= 0)
+    _T29 = (_T19 < _T28)
+    _T27 = (_T27 && _T29)
+    if (_T27 == 0) branch _L21
+    _T30 = (_T19 * 4)
+    _T30 = (_T30 + _T25)
+    *(_T30 + 0) = 0
     branch _L22
     _L21:
-    _T30 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T30
+    _T31 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm _T31
     call _PrintString
     call _Halt
     _L22:
-    _T31 = (_T2 + 1)
-    _T2 =  _T31
+    _T32 = (_T19 + 1)
+    _T19 =  _T32
     _L23:
-    _T32 = (_T2 < 10)
-    if (_T32 != 0) branch _L16
-    _T33 = (_T1 + 1)
-    _T1 =  _T33
+    _T33 = (_T19 < 10)
+    if (_T33 != 0) branch _L16
+    _T34 = (_T18 + 1)
+    _T18 =  _T34
     _L25:
-    _T34 = (_T1 < 10)
-    if (_T34 != 0) branch _L15
-    return <empty>
+    _T35 = (_T18 < 10)
+    if (_T35 != 0) branch _L15
+    return
 }
 
-FUNCTION(_DenseMatrix.Set) {
+FUNC<_DenseMatrix.Set> {
     _T4 = *(_T0 + 4)
     _T6 = *(_T4 - 4)
     _T5 = (_T1 >= 0)
@@ -327,10 +327,10 @@ FUNCTION(_DenseMatrix.Set) {
     call _PrintString
     call _Halt
     _L6:
-    return <empty>
+    return
 }
 
-FUNCTION(_DenseMatrix.Get) {
+FUNC<_DenseMatrix.Get> {
     _T3 = *(_T0 + 4)
     _T5 = *(_T3 - 4)
     _T4 = (_T1 >= 0)
@@ -365,57 +365,57 @@ FUNCTION(_DenseMatrix.Get) {
     return _T14
 }
 
-FUNCTION(_SparseItem.Init) {
+FUNC<_SparseItem.Init> {
     *(_T0 + 4) = _T1
     *(_T0 + 8) = _T2
     *(_T0 + 12) = _T3
-    return <empty>
+    return
 }
 
-FUNCTION(_SparseItem.GetNext) {
+FUNC<_SparseItem.GetNext> {
     _T1 = *(_T0 + 12)
     return _T1
 }
 
-FUNCTION(_SparseItem.GetY) {
+FUNC<_SparseItem.GetY> {
     _T1 = *(_T0 + 8)
     return _T1
 }
 
-FUNCTION(_SparseItem.GetData) {
+FUNC<_SparseItem.GetData> {
     _T1 = *(_T0 + 4)
     return _T1
 }
 
-FUNCTION(_SparseItem.SetData) {
+FUNC<_SparseItem.SetData> {
     *(_T0 + 4) = _T1
-    return <empty>
+    return
 }
 
-FUNCTION(_SparseMatrix.Init) {
-    _T1 =  0
+FUNC<_SparseMatrix.Init> {
     parm 44
-    _T5 = call _Alloc
-    _T3 = (_T5 + 44)
-    _T5 = (_T5 + 4)
+    _T4 = call _Alloc
+    _T2 = (_T4 + 44)
+    _T4 = (_T4 + 4)
     branch _L3
     _L2:
-    _T3 = (_T3 - 4)
-    *(_T3 + 0) = 0
+    _T2 = (_T2 - 4)
+    *(_T2 + 0) = 0
     _L3:
-    _T2 = (_T3 == _T5)
-    if (_T2 == 0) branch _L2
-    *(_T5 - 4) = 10
-    *(_T0 + 4) = _T5
+    _T1 = (_T2 == _T4)
+    if (_T1 == 0) branch _L2
+    *(_T4 - 4) = 10
+    *(_T0 + 4) = _T4
+    _T5 =  0
     branch _L9
     _L5:
     _T6 = *(_T0 + 4)
     _T8 = *(_T6 - 4)
-    _T7 = (_T1 >= 0)
-    _T9 = (_T1 < _T8)
+    _T7 = (_T5 >= 0)
+    _T9 = (_T5 < _T8)
     _T7 = (_T7 && _T9)
     if (_T7 == 0) branch _L7
-    _T10 = (_T1 * 4)
+    _T10 = (_T5 * 4)
     _T10 = (_T10 + _T6)
     *(_T10 + 0) = 0
     branch _L8
@@ -425,15 +425,15 @@ FUNCTION(_SparseMatrix.Init) {
     call _PrintString
     call _Halt
     _L8:
-    _T12 = (_T1 + 1)
-    _T1 =  _T12
+    _T12 = (_T5 + 1)
+    _T5 =  _T12
     _L9:
-    _T13 = (_T1 < 10)
+    _T13 = (_T5 < 10)
     if (_T13 != 0) branch _L5
-    return <empty>
+    return
 }
 
-FUNCTION(_SparseMatrix.Find) {
+FUNC<_SparseMatrix.Find> {
     _T4 = *(_T0 + 4)
     _T6 = *(_T4 - 4)
     _T5 = (_T1 >= 0)
@@ -471,7 +471,7 @@ FUNCTION(_SparseMatrix.Find) {
     return 0
 }
 
-FUNCTION(_SparseMatrix.Set) {
+FUNC<_SparseMatrix.Set> {
     parm _T0
     parm _T1
     parm _T2
@@ -525,10 +525,10 @@ FUNCTION(_SparseMatrix.Set) {
     call _PrintString
     call _Halt
     _L8:
-    return <empty>
+    return
 }
 
-FUNCTION(_SparseMatrix.Get) {
+FUNC<_SparseMatrix.Get> {
     parm _T0
     parm _T1
     parm _T2
@@ -546,7 +546,7 @@ FUNCTION(_SparseMatrix.Get) {
     return 0
 }
 
-FUNCTION(main) {
+FUNC<main> {
     _T1 = "Dense Rep \n"
     parm _T1
     call _PrintString
@@ -575,6 +575,6 @@ FUNCTION(main) {
     parm _T7
     _T10 = *(_T13 + 20)
     call _T10
-    return <empty>
+    return
 }
 

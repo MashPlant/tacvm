@@ -8,9 +8,8 @@ pub mod vm;
 pub const MAIN: &str = "main";
 
 // some string keywords in parser
-pub const EMPTY: &str = "<empty>";
 pub const VTBL: &str = "VTBL";
-pub const FUNCTION: &str = "FUNCTION";
+pub const FUNC: &str = "FUNC";
 pub const PARAM: &str = "parm";
 pub const CALL: &str = "call";
 pub const RETURN: &str = "return";
