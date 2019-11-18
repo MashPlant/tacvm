@@ -116,8 +116,8 @@ impl VM<'_> {
           let f = match f { Operand::Reg(r) => stk[r as usize], Operand::Const(c) => c };
           func = p.func.get(f as usize).ok_or(Error::CallOutOfRange)?;
           if func.stack_size < arg.len() as u32 { return Err(Error::TooMuchArg); }
-          (frame.pc = self.pc, self.pc = 0);
-          if cfg.stack_limit < self.stack.len() as u32 { return Err(Error::StackOverflow); }
+          if cfg.stack_limit <= self.stack.len() as u32 { return Err(Error::StackOverflow); }
+          (self.stack.last_mut().unwrap().pc = self.pc, self.pc = 0); // can't use `frame`, because `self.stack` is borrowed in the last line
           self.stack.push(Frame::new(f as u32, func.stack_size));
           let stk = self.stack.last_mut().unwrap().data.as_mut();
           stk[0..arg.len()].copy_from_slice(&arg);
