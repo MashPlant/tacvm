@@ -17,6 +17,12 @@ pub const BRANCH: &str = "branch";
 pub const REG_PREFIX: &str = "_T";
 pub const LABEL_PREFIX: &str = "_L";
 
+// the id of str / func starts growing from *_OFFSET; we won't depend on it, it is only used for debugging
+pub const STR_OFFSET: i32 = 0xA0000000u32 as i32;
+pub const FUNC_OFFSET: i32 = 0xB0000000u32 as i32;
+// the initial value of virtual registers
+pub const UNINITIALIZED: i32 = 0xDDDDDDDDu32 as i32;
+
 use std::io::{self, BufRead, Write};
 
 pub fn work(code: &str, inst_limit: u32, stack_limit: u32, stacktrace: bool, inst_count: bool, vm_input: Box<dyn BufRead>, vm_output: Box<dyn Write>, info_output: Box<dyn Write>) -> io::Result<()> {

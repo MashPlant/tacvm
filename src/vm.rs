@@ -1,8 +1,5 @@
 use std::io::{self, Write, BufRead, BufReader};
-use crate::mem::Mem;
-use crate::error::Error;
-use crate::program::{Program, Inst, VTblSlot, Operand};
-use crate::util::ReadHelper;
+use crate::{mem::Mem, error::Error, program::{Program, Inst, VTblSlot, Operand}, util::ReadHelper, UNINITIALIZED, REG_PREFIX, FUNC_OFFSET};
 
 pub struct RunConfig {
   pub inst_limit: u32,
@@ -33,7 +30,8 @@ pub struct Frame {
 
 impl Frame {
   pub fn new(func: u32, stack_size: u32) -> Frame {
-    Frame { pc: 0, func, data: vec![0; stack_size as usize].into_boxed_slice() } // this 0 is useless
+    // `pc: 0` is meaningless, a meaning full pc value will be assign only when the next function is called
+    Frame { pc: 0, func, data: vec![UNINITIALIZED; stack_size as usize].into_boxed_slice() }
   }
 }
 
@@ -59,7 +57,7 @@ impl VM<'_> {
           VTblSlot::Int(i) => i,
           VTblSlot::VTblRef(v) => vtbl_addr[v as usize] as i32,
           VTblSlot::String(s) => str_addr[s as usize],
-          VTblSlot::FuncRef(f) => f as i32,
+          VTblSlot::FuncRef(f) => f,
         };
         mem.store(addr, idx as i32 * 4, data).unwrap();
       }
@@ -113,7 +111,7 @@ impl VM<'_> {
           arg.clear();
         }
         Call(f) => {
-          let f = match f { Operand::Reg(r) => stk[r as usize], Operand::Const(c) => c };
+          let f = match f { Operand::Reg(r) => stk[r as usize], Operand::Const(c) => c } - FUNC_OFFSET;
           func = p.func.get(f as usize).ok_or(Error::CallOutOfRange)?;
           if func.stack_size < arg.len() as u32 { return Err(Error::TooMuchArg); }
           if cfg.stack_limit <= self.stack.len() as u32 { return Err(Error::StackOverflow); }
@@ -145,15 +143,35 @@ impl VM<'_> {
     Err(Error::TLE)
   }
 
-  pub fn stacktrace(&self, wt: &mut impl Write) -> io::Result<()> {
+  fn stacktrace(&self, wt: &mut impl Write) -> io::Result<()> {
     for (idx, f) in self.stack.iter().enumerate() {
       let func = &self.program.func[f.func as usize];
       write!(wt, "  - function `{}`, ", func.raw_func.name)?;
       let pc = if idx + 1 == self.stack.len() { self.pc } else { f.pc } - 1;
       let raw = func.raw_code[pc as usize];
-      writeln!(wt, "line {}, code `{}`", raw.line, raw.code)?;
+      write!(wt, "line {}, code `{}`, [", raw.line, raw.code)?;
+      let mut first = true;
+      for (idx, &x) in f.data.iter().enumerate() {
+        if !first { write!(wt, ", ")?; }
+        first = false;
+        write!(wt, "{}{} = {}", REG_PREFIX, idx, x)?;
+        if let Some(s) = self.guess_value(x) { write!(wt, "{}", s)?; }
+      }
+      writeln!(wt, "]")?;
     }
     Ok(())
+  }
+
+  fn guess_value(&self, x: i32) -> Option<String> {
+    use std::fmt::Write;
+    let mut s = "(".to_owned();
+    if x == UNINITIALIZED { let _ = write!(s, "uninitialized, "); }
+    if let Ok(_) = self.mem.check(x as u32, 0) { let _ = write!(s, "ptr, "); }
+    if let Ok(s1) = self.mem.get_str(x) { let _ = write!(s, "{:?}, ", s1); }
+    if let Some(f) = self.program.func.get((x - FUNC_OFFSET) as usize) { let _ = write!(s, "func<{}>, ", f.raw_func.name); }
+    (s.pop(), s.pop());
+    s.push(')');
+    if s.len() > 2 { Some(s) } else { None }
   }
 }
 

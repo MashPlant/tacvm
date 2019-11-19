@@ -1,6 +1,6 @@
 use indexmap::IndexSet;
 use std::collections::HashMap;
-use crate::{vm::{intrinsic, IntrinsicFn}, MAIN};
+use crate::{vm::{intrinsic, IntrinsicFn}, MAIN, FUNC_OFFSET};
 
 #[derive(Debug, Clone)]
 pub struct RawProgram<'a> {
@@ -83,9 +83,9 @@ impl BinOp {
   pub fn eval(self, l: i32, r: i32) -> Option<i32> {
     use BinOp::*;
     match self {
-      Add => Some(l.wrapping_add(r)),
-      Sub => Some(l.wrapping_sub(r)),
-      Mul => Some(l.wrapping_mul(r)),
+      Add => Some(l + r),
+      Sub => Some(l - r),
+      Mul => Some(l * r),
       Div => l.checked_div(r),
       Mod => l.checked_rem(r),
       And => Some(((l != 0) && (r != 0)) as i32),
@@ -119,7 +119,7 @@ pub enum VTblSlot {
   Int(i32),
   VTblRef(u32),
   String(u32),
-  FuncRef(u32),
+  FuncRef(i32),
 }
 
 pub struct Func<'a> {
@@ -152,7 +152,7 @@ impl<'a> Program<'a> {
             return Err(format!("line {}: no such vtbl `{}`", s.line, v));
           }
           RawVTblSlotKind::String(s) => VTblSlot::String(str_pool.insert_full(s).0 as u32),
-          &RawVTblSlotKind::FuncRef(f) => if let Some((idx, _)) = func_set.get_full(f) { VTblSlot::FuncRef(idx as u32) } else {
+          &RawVTblSlotKind::FuncRef(f) => if let Some((idx, _)) = func_set.get_full(f) { VTblSlot::FuncRef(idx as i32 + FUNC_OFFSET) } else {
             return Err(format!("line {}: no such func `{}`", s.line, f));
           }
         });
@@ -203,7 +203,7 @@ impl<'a> Program<'a> {
             code.push(match c {
               CallKind::Reg(r) => Call(Operand::Reg(upd(r))),
               CallKind::Named(name) => if let Some(i) = intrinsic(name) { Intrinsic(i) } else {
-                if let Some((idx, _)) = func_set.get_full(name) { Call(Operand::Const(idx as i32)) } else { return Err(format!("line {}: no such func `{}`", i.line, name)); }
+                if let Some((idx, _)) = func_set.get_full(name) { Call(Operand::Const(idx as i32 + FUNC_OFFSET)) } else { return Err(format!("line {}: no such func `{}`", i.line, name)); }
               }
             });
             raw_code.push(i);
@@ -232,7 +232,7 @@ impl<'a> Program<'a> {
           &RawInstKind::Store(r, base, off) => match r { Reg(r) => StoreR(upd(r), base, off), Const(r) => StoreC(r, base, off) }
           RawInstKind::LStr(d, s) => LStr(upd(*d), str_pool.insert_full(s).0 as u32),
           &RawInstKind::LVTbl(d, v) => LVTbl(upd(d), if let Some((idx, _)) = vtbl_set.get_full(v) { idx as u32 } else { return Err(format!("line {}: no such vtbl `{}`", i.line, v)); }),
-          &RawInstKind::LFunc(d, v) => Li(upd(d), if let Some((idx, _)) = func_set.get_full(v) { idx as i32 } else { return Err(format!("line {}: no such vtbl `{}`", i.line, v)); }),
+          &RawInstKind::LFunc(d, v) => Li(upd(d), if let Some((idx, _)) = func_set.get_full(v) { idx as i32 + FUNC_OFFSET } else { return Err(format!("line {}: no such vtbl `{}`", i.line, v)); }),
         };
         idx += 1; // Call and Label won't reach here
         code.push(inst);
