@@ -44,49 +44,49 @@ VTBL<_Main> {
     "Main"
 }
 
-FUNC<_Matrix_New> {
+FUNC<_Matrix._new> {
     parm 4
-    _T0 = call _Alloc
-    _T1 = VTBL<_Matrix>
-    *(_T0 + 0) = _T1
-    return _T0
+    %0 = call _Alloc
+    %1 = VTBL<_Matrix>
+    *(%0 + 0) = %1
+    return %0
 }
 
-FUNC<_DenseMatrix_New> {
+FUNC<_DenseMatrix._new> {
     parm 8
-    _T0 = call _Alloc
-    _T1 = VTBL<_DenseMatrix>
-    *(_T0 + 0) = _T1
-    *(_T0 + 4) = 0
-    return _T0
+    %0 = call _Alloc
+    %1 = VTBL<_DenseMatrix>
+    *(%0 + 0) = %1
+    *(%0 + 4) = 0
+    return %0
 }
 
-FUNC<_SparseItem_New> {
+FUNC<_SparseItem._new> {
     parm 16
-    _T0 = call _Alloc
-    _T1 = VTBL<_SparseItem>
-    *(_T0 + 0) = _T1
-    *(_T0 + 4) = 0
-    *(_T0 + 8) = 0
-    *(_T0 + 12) = 0
-    return _T0
+    %0 = call _Alloc
+    %1 = VTBL<_SparseItem>
+    *(%0 + 0) = %1
+    *(%0 + 4) = 0
+    *(%0 + 8) = 0
+    *(%0 + 12) = 0
+    return %0
 }
 
-FUNC<_SparseMatrix_New> {
+FUNC<_SparseMatrix._new> {
     parm 8
-    _T0 = call _Alloc
-    _T1 = VTBL<_SparseMatrix>
-    *(_T0 + 0) = _T1
-    *(_T0 + 4) = 0
-    return _T0
+    %0 = call _Alloc
+    %1 = VTBL<_SparseMatrix>
+    *(%0 + 0) = %1
+    *(%0 + 4) = 0
+    return %0
 }
 
-FUNC<_Main_New> {
+FUNC<_Main._new> {
     parm 4
-    _T0 = call _Alloc
-    _T1 = VTBL<_Main>
-    *(_T0 + 0) = _T1
-    return _T0
+    %0 = call _Alloc
+    %1 = VTBL<_Main>
+    *(%0 + 0) = %1
+    return %0
 }
 
 FUNC<_Matrix.Init> {
@@ -102,479 +102,479 @@ FUNC<_Matrix.Get> {
 }
 
 FUNC<_Matrix.PrintMatrix> {
-    _T1 =  0
-    branch _L5
-    _L1:
-    _T2 =  0
-    branch _L3
-    _L2:
-    parm _T0
-    parm _T1
-    parm _T2
-    _T4 = *(_T0 + 0)
-    _T4 = *(_T4 + 16)
-    _T3 = call _T4
-    parm _T3
+    %1 = 0
+    branch %5
+    %1:
+    %2 = 0
+    branch %3
+    %2:
+    parm %0
+    parm %1
+    parm %2
+    %4 = *(%0 + 0)
+    %4 = *(%4 + 16)
+    %3 = call %4
+    parm %3
     call _PrintInt
-    _T5 = "\t"
-    parm _T5
+    %5 = "\t"
+    parm %5
     call _PrintString
-    _T6 = (_T2 + 1)
-    _T2 =  _T6
-    _L3:
-    _T7 = (_T2 < 10)
-    if (_T7 != 0) branch _L2
-    _T8 = "\n"
-    parm _T8
+    %6 = (%2 + 1)
+    %2 = %6
+    %3:
+    %7 = (%2 < 10)
+    if (%7 != 0) branch %2
+    %8 = "\n"
+    parm %8
     call _PrintString
-    _T9 = (_T1 + 1)
-    _T1 =  _T9
-    _L5:
-    _T10 = (_T1 < 10)
-    if (_T10 != 0) branch _L1
+    %9 = (%1 + 1)
+    %1 = %9
+    %5:
+    %10 = (%1 < 10)
+    if (%10 != 0) branch %1
     return
 }
 
 FUNC<_Matrix.SeedMatrix> {
-    _T1 =  0
-    branch _L5
-    _L1:
-    _T2 =  0
-    branch _L3
-    _L2:
-    _T3 = (_T1 + _T2)
-    parm _T0
-    parm _T1
-    parm _T2
-    parm _T3
-    _T4 = *(_T0 + 0)
-    _T4 = *(_T4 + 12)
-    call _T4
-    _T5 = (_T2 + 1)
-    _T2 =  _T5
-    _L3:
-    _T6 = (_T2 < 5)
-    if (_T6 != 0) branch _L2
-    _T7 = (_T1 + 1)
-    _T1 =  _T7
-    _L5:
-    _T8 = (_T1 < 5)
-    if (_T8 != 0) branch _L1
-    parm _T0
+    %1 = 0
+    branch %5
+    %1:
+    %2 = 0
+    branch %3
+    %2:
+    %3 = (%1 + %2)
+    parm %0
+    parm %1
+    parm %2
+    parm %3
+    %4 = *(%0 + 0)
+    %4 = *(%4 + 12)
+    call %4
+    %5 = (%2 + 1)
+    %2 = %5
+    %3:
+    %6 = (%2 < 5)
+    if (%6 != 0) branch %2
+    %7 = (%1 + 1)
+    %1 = %7
+    %5:
+    %8 = (%1 < 5)
+    if (%8 != 0) branch %1
+    parm %0
     parm 2
     parm 3
     parm 4
-    _T15 = *(_T0 + 0)
-    _T20 = *(_T15 + 12)
-    call _T20
-    parm _T0
+    %15 = *(%0 + 0)
+    %20 = *(%15 + 12)
+    call %20
+    parm %0
     parm 4
     parm 6
     parm 2
-    call _T20
-    parm _T0
+    call %20
+    parm %0
     parm 2
     parm 3
     parm 5
-    call _T20
-    parm _T0
+    call %20
+    parm %0
     parm 0
     parm 0
     parm 1
-    call _T20
-    parm _T0
+    call %20
+    parm %0
     parm 1
     parm 6
     parm 3
-    call _T20
-    parm _T0
+    call %20
+    parm %0
     parm 7
     parm 7
     parm 7
-    call _T20
+    call %20
     return
 }
 
 FUNC<_DenseMatrix.Init> {
     parm 44
-    _T4 = call _Alloc
-    _T2 = (_T4 + 44)
-    _T4 = (_T4 + 4)
-    branch _L3
-    _L2:
-    _T2 = (_T2 - 4)
-    *(_T2 + 0) = 0
-    _L3:
-    _T1 = (_T2 == _T4)
-    if (_T1 == 0) branch _L2
-    *(_T4 - 4) = 10
-    *(_T0 + 4) = _T4
-    _T5 =  0
-    branch _L13
-    _L5:
+    %4 = call _Alloc
+    %2 = (%4 + 44)
+    %4 = (%4 + 4)
+    branch %3
+    %2:
+    %2 = (%2 - 4)
+    *(%2 + 0) = 0
+    %3:
+    %1 = (%2 == %4)
+    if (%1 == 0) branch %2
+    *(%4 - 4) = 10
+    *(%0 + 4) = %4
+    %5 = 0
+    branch %13
+    %5:
     parm 44
-    _T9 = call _Alloc
-    _T7 = (_T9 + 44)
-    _T9 = (_T9 + 4)
-    branch _L8
-    _L7:
-    _T7 = (_T7 - 4)
-    *(_T7 + 0) = 0
-    _L8:
-    _T6 = (_T7 == _T9)
-    if (_T6 == 0) branch _L7
-    *(_T9 - 4) = 10
-    _T10 = *(_T0 + 4)
-    _T12 = *(_T10 - 4)
-    _T11 = (_T5 >= 0)
-    _T13 = (_T5 < _T12)
-    _T11 = (_T11 && _T13)
-    if (_T11 == 0) branch _L11
-    _T14 = (_T5 * 4)
-    _T14 = (_T14 + _T10)
-    *(_T14 + 0) = _T9
-    branch _L12
-    _L11:
-    _T15 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T15
+    %9 = call _Alloc
+    %7 = (%9 + 44)
+    %9 = (%9 + 4)
+    branch %8
+    %7:
+    %7 = (%7 - 4)
+    *(%7 + 0) = 0
+    %8:
+    %6 = (%7 == %9)
+    if (%6 == 0) branch %7
+    *(%9 - 4) = 10
+    %10 = *(%0 + 4)
+    %12 = *(%10 - 4)
+    %11 = (%5 >= 0)
+    %13 = (%5 < %12)
+    %11 = (%11 && %13)
+    if (%11 == 0) branch %11
+    %14 = (%5 * 4)
+    %14 = (%14 + %10)
+    *(%14 + 0) = %9
+    branch %12
+    %11:
+    %15 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm %15
     call _PrintString
     call _Halt
-    _L12:
-    _T16 = (_T5 + 1)
-    _T5 =  _T16
-    _L13:
-    _T17 = (_T5 < 10)
-    if (_T17 != 0) branch _L5
-    _T18 =  0
-    branch _L25
-    _L15:
-    _T19 =  0
-    branch _L23
-    _L16:
-    _T20 = *(_T0 + 4)
-    _T22 = *(_T20 - 4)
-    _T21 = (_T18 >= 0)
-    _T23 = (_T18 < _T22)
-    _T21 = (_T21 && _T23)
-    if (_T21 == 0) branch _L18
-    _T24 = (_T18 * 4)
-    _T24 = (_T24 + _T20)
-    _T25 = *(_T24 + 0)
-    branch _L19
-    _L18:
-    _T26 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T26
+    %12:
+    %16 = (%5 + 1)
+    %5 = %16
+    %13:
+    %17 = (%5 < 10)
+    if (%17 != 0) branch %5
+    %18 = 0
+    branch %25
+    %15:
+    %19 = 0
+    branch %23
+    %16:
+    %20 = *(%0 + 4)
+    %22 = *(%20 - 4)
+    %21 = (%18 >= 0)
+    %23 = (%18 < %22)
+    %21 = (%21 && %23)
+    if (%21 == 0) branch %18
+    %24 = (%18 * 4)
+    %24 = (%24 + %20)
+    %25 = *(%24 + 0)
+    branch %19
+    %18:
+    %26 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm %26
     call _PrintString
     call _Halt
-    _L19:
-    _T28 = *(_T25 - 4)
-    _T27 = (_T19 >= 0)
-    _T29 = (_T19 < _T28)
-    _T27 = (_T27 && _T29)
-    if (_T27 == 0) branch _L21
-    _T30 = (_T19 * 4)
-    _T30 = (_T30 + _T25)
-    *(_T30 + 0) = 0
-    branch _L22
-    _L21:
-    _T31 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T31
+    %19:
+    %28 = *(%25 - 4)
+    %27 = (%19 >= 0)
+    %29 = (%19 < %28)
+    %27 = (%27 && %29)
+    if (%27 == 0) branch %21
+    %30 = (%19 * 4)
+    %30 = (%30 + %25)
+    *(%30 + 0) = 0
+    branch %22
+    %21:
+    %31 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm %31
     call _PrintString
     call _Halt
-    _L22:
-    _T32 = (_T19 + 1)
-    _T19 =  _T32
-    _L23:
-    _T33 = (_T19 < 10)
-    if (_T33 != 0) branch _L16
-    _T34 = (_T18 + 1)
-    _T18 =  _T34
-    _L25:
-    _T35 = (_T18 < 10)
-    if (_T35 != 0) branch _L15
+    %22:
+    %32 = (%19 + 1)
+    %19 = %32
+    %23:
+    %33 = (%19 < 10)
+    if (%33 != 0) branch %16
+    %34 = (%18 + 1)
+    %18 = %34
+    %25:
+    %35 = (%18 < 10)
+    if (%35 != 0) branch %15
     return
 }
 
 FUNC<_DenseMatrix.Set> {
-    _T4 = *(_T0 + 4)
-    _T6 = *(_T4 - 4)
-    _T5 = (_T1 >= 0)
-    _T7 = (_T1 < _T6)
-    _T5 = (_T5 && _T7)
-    if (_T5 == 0) branch _L2
-    _T8 = (_T1 * 4)
-    _T8 = (_T8 + _T4)
-    _T9 = *(_T8 + 0)
-    branch _L3
-    _L2:
-    _T10 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T10
+    %4 = *(%0 + 4)
+    %6 = *(%4 - 4)
+    %5 = (%1 >= 0)
+    %7 = (%1 < %6)
+    %5 = (%5 && %7)
+    if (%5 == 0) branch %2
+    %8 = (%1 * 4)
+    %8 = (%8 + %4)
+    %9 = *(%8 + 0)
+    branch %3
+    %2:
+    %10 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm %10
     call _PrintString
     call _Halt
-    _L3:
-    _T12 = *(_T9 - 4)
-    _T11 = (_T2 >= 0)
-    _T13 = (_T2 < _T12)
-    _T11 = (_T11 && _T13)
-    if (_T11 == 0) branch _L5
-    _T14 = (_T2 * 4)
-    _T14 = (_T14 + _T9)
-    *(_T14 + 0) = _T3
-    branch _L6
-    _L5:
-    _T15 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T15
+    %3:
+    %12 = *(%9 - 4)
+    %11 = (%2 >= 0)
+    %13 = (%2 < %12)
+    %11 = (%11 && %13)
+    if (%11 == 0) branch %5
+    %14 = (%2 * 4)
+    %14 = (%14 + %9)
+    *(%14 + 0) = %3
+    branch %6
+    %5:
+    %15 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm %15
     call _PrintString
     call _Halt
-    _L6:
+    %6:
     return
 }
 
 FUNC<_DenseMatrix.Get> {
-    _T3 = *(_T0 + 4)
-    _T5 = *(_T3 - 4)
-    _T4 = (_T1 >= 0)
-    _T6 = (_T1 < _T5)
-    _T4 = (_T4 && _T6)
-    if (_T4 == 0) branch _L2
-    _T7 = (_T1 * 4)
-    _T7 = (_T7 + _T3)
-    _T8 = *(_T7 + 0)
-    branch _L3
-    _L2:
-    _T9 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T9
+    %3 = *(%0 + 4)
+    %5 = *(%3 - 4)
+    %4 = (%1 >= 0)
+    %6 = (%1 < %5)
+    %4 = (%4 && %6)
+    if (%4 == 0) branch %2
+    %7 = (%1 * 4)
+    %7 = (%7 + %3)
+    %8 = *(%7 + 0)
+    branch %3
+    %2:
+    %9 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm %9
     call _PrintString
     call _Halt
-    _L3:
-    _T11 = *(_T8 - 4)
-    _T10 = (_T2 >= 0)
-    _T12 = (_T2 < _T11)
-    _T10 = (_T10 && _T12)
-    if (_T10 == 0) branch _L5
-    _T13 = (_T2 * 4)
-    _T13 = (_T13 + _T8)
-    _T14 = *(_T13 + 0)
-    branch _L6
-    _L5:
-    _T15 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T15
+    %3:
+    %11 = *(%8 - 4)
+    %10 = (%2 >= 0)
+    %12 = (%2 < %11)
+    %10 = (%10 && %12)
+    if (%10 == 0) branch %5
+    %13 = (%2 * 4)
+    %13 = (%13 + %8)
+    %14 = *(%13 + 0)
+    branch %6
+    %5:
+    %15 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm %15
     call _PrintString
     call _Halt
-    _L6:
-    return _T14
+    %6:
+    return %14
 }
 
 FUNC<_SparseItem.Init> {
-    *(_T0 + 4) = _T1
-    *(_T0 + 8) = _T2
-    *(_T0 + 12) = _T3
+    *(%0 + 4) = %1
+    *(%0 + 8) = %2
+    *(%0 + 12) = %3
     return
 }
 
 FUNC<_SparseItem.GetNext> {
-    _T1 = *(_T0 + 12)
-    return _T1
+    %1 = *(%0 + 12)
+    return %1
 }
 
 FUNC<_SparseItem.GetY> {
-    _T1 = *(_T0 + 8)
-    return _T1
+    %1 = *(%0 + 8)
+    return %1
 }
 
 FUNC<_SparseItem.GetData> {
-    _T1 = *(_T0 + 4)
-    return _T1
+    %1 = *(%0 + 4)
+    return %1
 }
 
 FUNC<_SparseItem.SetData> {
-    *(_T0 + 4) = _T1
+    *(%0 + 4) = %1
     return
 }
 
 FUNC<_SparseMatrix.Init> {
     parm 44
-    _T4 = call _Alloc
-    _T2 = (_T4 + 44)
-    _T4 = (_T4 + 4)
-    branch _L3
-    _L2:
-    _T2 = (_T2 - 4)
-    *(_T2 + 0) = 0
-    _L3:
-    _T1 = (_T2 == _T4)
-    if (_T1 == 0) branch _L2
-    *(_T4 - 4) = 10
-    *(_T0 + 4) = _T4
-    _T5 =  0
-    branch _L9
-    _L5:
-    _T6 = *(_T0 + 4)
-    _T8 = *(_T6 - 4)
-    _T7 = (_T5 >= 0)
-    _T9 = (_T5 < _T8)
-    _T7 = (_T7 && _T9)
-    if (_T7 == 0) branch _L7
-    _T10 = (_T5 * 4)
-    _T10 = (_T10 + _T6)
-    *(_T10 + 0) = 0
-    branch _L8
-    _L7:
-    _T11 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T11
+    %4 = call _Alloc
+    %2 = (%4 + 44)
+    %4 = (%4 + 4)
+    branch %3
+    %2:
+    %2 = (%2 - 4)
+    *(%2 + 0) = 0
+    %3:
+    %1 = (%2 == %4)
+    if (%1 == 0) branch %2
+    *(%4 - 4) = 10
+    *(%0 + 4) = %4
+    %5 = 0
+    branch %9
+    %5:
+    %6 = *(%0 + 4)
+    %8 = *(%6 - 4)
+    %7 = (%5 >= 0)
+    %9 = (%5 < %8)
+    %7 = (%7 && %9)
+    if (%7 == 0) branch %7
+    %10 = (%5 * 4)
+    %10 = (%10 + %6)
+    *(%10 + 0) = 0
+    branch %8
+    %7:
+    %11 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm %11
     call _PrintString
     call _Halt
-    _L8:
-    _T12 = (_T5 + 1)
-    _T5 =  _T12
-    _L9:
-    _T13 = (_T5 < 10)
-    if (_T13 != 0) branch _L5
+    %8:
+    %12 = (%5 + 1)
+    %5 = %12
+    %9:
+    %13 = (%5 < 10)
+    if (%13 != 0) branch %5
     return
 }
 
 FUNC<_SparseMatrix.Find> {
-    _T4 = *(_T0 + 4)
-    _T6 = *(_T4 - 4)
-    _T5 = (_T1 >= 0)
-    _T7 = (_T1 < _T6)
-    _T5 = (_T5 && _T7)
-    if (_T5 == 0) branch _L2
-    _T8 = (_T1 * 4)
-    _T8 = (_T8 + _T4)
-    _T9 = *(_T8 + 0)
-    branch _L3
-    _L2:
-    _T10 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T10
+    %4 = *(%0 + 4)
+    %6 = *(%4 - 4)
+    %5 = (%1 >= 0)
+    %7 = (%1 < %6)
+    %5 = (%5 && %7)
+    if (%5 == 0) branch %2
+    %8 = (%1 * 4)
+    %8 = (%8 + %4)
+    %9 = *(%8 + 0)
+    branch %3
+    %2:
+    %10 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm %10
     call _PrintString
     call _Halt
-    _L3:
-    _T3 =  _T9
-    branch _L7
-    _L4:
-    parm _T3
-    _T17 = *(_T3 + 0)
-    _T12 = *(_T17 + 16)
-    _T11 = call _T12
-    _T13 = (_T11 == _T2)
-    if (_T13 == 0) branch _L6
-    return _T3
-    _L6:
-    parm _T3
-    _T15 = *(_T17 + 12)
-    _T14 = call _T15
-    _T3 =  _T14
-    _L7:
-    _T16 = (_T3 != 0)
-    if (_T16 != 0) branch _L4
+    %3:
+    %3 = %9
+    branch %7
+    %4:
+    parm %3
+    %17 = *(%3 + 0)
+    %12 = *(%17 + 16)
+    %11 = call %12
+    %13 = (%11 == %2)
+    if (%13 == 0) branch %6
+    return %3
+    %6:
+    parm %3
+    %15 = *(%17 + 12)
+    %14 = call %15
+    %3 = %14
+    %7:
+    %16 = (%3 != 0)
+    if (%16 != 0) branch %4
     return 0
 }
 
 FUNC<_SparseMatrix.Set> {
-    parm _T0
-    parm _T1
-    parm _T2
-    _T6 = *(_T0 + 0)
-    _T6 = *(_T6 + 28)
-    _T5 = call _T6
-    _T7 = (_T5 != 0)
-    if (_T7 == 0) branch _L2
-    parm _T5
-    parm _T3
-    _T8 = *(_T5 + 0)
-    _T8 = *(_T8 + 24)
-    call _T8
-    branch _L8
-    _L2:
-    _T9 = call _SparseItem_New
-    _T10 = *(_T0 + 4)
-    _T12 = *(_T10 - 4)
-    _T24 = (_T1 >= 0)
-    _T13 = (_T1 < _T12)
-    _T11 = (_T24 && _T13)
-    if (_T11 == 0) branch _L4
-    _T25 = (_T1 * 4)
-    _T14 = (_T25 + _T10)
-    _T15 = *(_T14 + 0)
-    branch _L5
-    _L4:
-    _T16 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T16
+    parm %0
+    parm %1
+    parm %2
+    %6 = *(%0 + 0)
+    %6 = *(%6 + 28)
+    %5 = call %6
+    %7 = (%5 != 0)
+    if (%7 == 0) branch %2
+    parm %5
+    parm %3
+    %8 = *(%5 + 0)
+    %8 = *(%8 + 24)
+    call %8
+    branch %8
+    %2:
+    %9 = call _SparseItem._new
+    %10 = *(%0 + 4)
+    %12 = *(%10 - 4)
+    %24 = (%1 >= 0)
+    %13 = (%1 < %12)
+    %11 = (%24 && %13)
+    if (%11 == 0) branch %4
+    %25 = (%1 * 4)
+    %14 = (%25 + %10)
+    %15 = *(%14 + 0)
+    branch %5
+    %4:
+    %16 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm %16
     call _PrintString
     call _Halt
-    _L5:
-    parm _T9
-    parm _T3
-    parm _T2
-    parm _T15
-    _T17 = *(_T9 + 0)
-    _T17 = *(_T17 + 8)
-    call _T17
-    _T18 = *(_T0 + 4)
-    _T20 = *(_T18 - 4)
-    _T21 = (_T1 < _T20)
-    _T19 = (_T24 && _T21)
-    if (_T19 == 0) branch _L7
-    _T22 = (_T25 + _T18)
-    *(_T22 + 0) = _T9
-    branch _L8
-    _L7:
-    _T23 = "Decaf runtime error: Array subscript out of bounds\n"
-    parm _T23
+    %5:
+    parm %9
+    parm %3
+    parm %2
+    parm %15
+    %17 = *(%9 + 0)
+    %17 = *(%17 + 8)
+    call %17
+    %18 = *(%0 + 4)
+    %20 = *(%18 - 4)
+    %21 = (%1 < %20)
+    %19 = (%24 && %21)
+    if (%19 == 0) branch %7
+    %22 = (%25 + %18)
+    *(%22 + 0) = %9
+    branch %8
+    %7:
+    %23 = "Decaf runtime error: Array subscript out of bounds\n"
+    parm %23
     call _PrintString
     call _Halt
-    _L8:
+    %8:
     return
 }
 
 FUNC<_SparseMatrix.Get> {
-    parm _T0
-    parm _T1
-    parm _T2
-    _T5 = *(_T0 + 0)
-    _T5 = *(_T5 + 28)
-    _T4 = call _T5
-    _T6 = (_T4 != 0)
-    if (_T6 == 0) branch _L2
-    parm _T4
-    _T8 = *(_T4 + 0)
-    _T8 = *(_T8 + 20)
-    _T7 = call _T8
-    return _T7
-    _L2:
+    parm %0
+    parm %1
+    parm %2
+    %5 = *(%0 + 0)
+    %5 = *(%5 + 28)
+    %4 = call %5
+    %6 = (%4 != 0)
+    if (%6 == 0) branch %2
+    parm %4
+    %8 = *(%4 + 0)
+    %8 = *(%8 + 20)
+    %7 = call %8
+    return %7
+    %2:
     return 0
 }
 
 FUNC<main> {
-    _T1 = "Dense Rep \n"
-    parm _T1
+    %1 = "Dense Rep \n"
+    parm %1
     call _PrintString
-    _T2 = call _DenseMatrix_New
-    parm _T2
-    _T11 = *(_T2 + 0)
-    _T3 = *(_T11 + 8)
-    call _T3
-    parm _T2
-    _T4 = *(_T11 + 24)
-    call _T4
-    parm _T2
-    _T5 = *(_T11 + 20)
-    call _T5
-    _T6 = "Sparse Rep \n"
-    parm _T6
+    %2 = call _DenseMatrix._new
+    parm %2
+    %11 = *(%2 + 0)
+    %3 = *(%11 + 8)
+    call %3
+    parm %2
+    %4 = *(%11 + 24)
+    call %4
+    parm %2
+    %5 = *(%11 + 20)
+    call %5
+    %6 = "Sparse Rep \n"
+    parm %6
     call _PrintString
-    _T7 = call _SparseMatrix_New
-    parm _T7
-    _T13 = *(_T7 + 0)
-    _T8 = *(_T13 + 8)
-    call _T8
-    parm _T7
-    _T9 = *(_T13 + 24)
-    call _T9
-    parm _T7
-    _T10 = *(_T13 + 20)
-    call _T10
+    %7 = call _SparseMatrix._new
+    parm %7
+    %13 = *(%7 + 0)
+    %8 = *(%13 + 8)
+    call %8
+    parm %7
+    %9 = *(%13 + 24)
+    call %9
+    parm %7
+    %10 = *(%13 + 20)
+    call %10
     return
 }
 

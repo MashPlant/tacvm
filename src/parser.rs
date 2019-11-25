@@ -1,7 +1,7 @@
 use nom::{branch::alt, bytes::complete::{escaped, tag, take_while1}, character::complete::{none_of, digit1, space0, one_of, space1, multispace0, newline}, combinator::{cut, map, map_res, flat_map}, sequence::{preceded, terminated, tuple}, multi::{separated_list, fold_many1}};
 use nom_locate::LocatedSpan;
 use unescape::unescape;
-use crate::{program::*, VTBL, FUNC, CALL, PARAM, RETURN, REG_PREFIX, LABEL_PREFIX, BRANCH};
+use crate::{program::*, VTBL, FUNC, CALL, PARAM, RETURN, ID_PREFIX, BRANCH};
 use nom::combinator::opt;
 
 pub type Span<'a> = LocatedSpan<&'a str>;
@@ -44,49 +44,47 @@ pub fn str(i: Span) -> IResult<&str> {
     .map(|r| (r.0, r.1.fragment))
 }
 
-pub fn reg(i: Span) -> IResult<u32> {
-  map_res(preceded(tag(REG_PREFIX), cut(digit1)), |s: Span| s.fragment.parse::<u32>())(i)
+// maybe id should be an abbreviation for identifier, but actually id is like %1, identifier is like [0-9A-Z-az._]+
+// I have run out of my words...
+pub fn id(i: Span) -> IResult<u32> {
+  map_res(preceded(tag(ID_PREFIX), cut(digit1)), |s: Span| s.fragment.parse::<u32>())(i)
 }
 
-pub fn id(i: Span) -> IResult<&str> {
+pub fn identifier(i: Span) -> IResult<&str> {
   take_while1(|ch: char| ch.is_ascii_alphanumeric() || ch == '_' || ch == '.')(i)
     .map(|r| (r.0, r.1.fragment))
 }
 
-pub fn label(i: Span) -> IResult<u32> {
-  map_res(preceded(tag(LABEL_PREFIX), cut(digit1)), |s: Span| s.fragment.parse::<u32>())(i)
-}
-
 pub fn branch(i: Span) -> IResult<u32> {
-  preceded(tuple((tag(BRANCH), space1)), cut(label))(i)
+  preceded(tuple((tag(BRANCH), space1)), cut(id))(i)
 }
 
 pub fn operand(i: Span) -> IResult<Operand> {
-  alt((map(int, Operand::Const), map(reg, Operand::Reg), ))(i)
+  alt((map(int, Operand::Const), map(id, Operand::Reg), ))(i)
 }
 
 pub fn mem(i: Span) -> IResult<(u32, i32)> {
   map(preceded(tuple((tag("*"), space0)),
-               cut(tuple((tag("("), space0, reg, space0, alt((tag("+"), tag("-"))), space0, int, space0, tag(")"))))),
+               cut(tuple((tag("("), space0, id, space0, alt((tag("+"), tag("-"))), space0, int, space0, tag(")"))))),
       |(_, _, base, _, op, _, off, _, _, )| (base, if op.fragment == "+" { off } else { -off }))(i)
 }
 
 pub fn call(i: Span) -> IResult<CallKind> {
-  preceded(tuple((tag(CALL), space0)), cut(alt((map(reg, CallKind::Reg), map(id, CallKind::Named), ))))(i)
+  preceded(tuple((tag(CALL), space0)), cut(alt((map(id, CallKind::Reg), map(identifier, CallKind::Named), ))))(i)
 }
 
 pub fn inst<'a>(i: Span<'a>) -> IResult<'a, RawInst> {
   use RawInstKind::*;
   let new = |kind: RawInstKind<'a>| RawInst { line: i.line, code: "", kind };
   alt((
-    flat_map(tuple((reg, space0, tag("="), space0)), move |(d, _, _, _)| cut(alt((
+    flat_map(tuple((id, space0, tag("="), space0)), move |(d, _, _, _)| cut(alt((
       map(tuple((tag("("), space0, operand, space0, bin_op, space0, operand, space0, tag(")"))), move |(_, _, l, _, op, _, r, _, _)| new(Bin(op, d, l, r))),
       map(tuple((un_op, space0, operand)), move |(op, _, r)| new(Un(op, d, r))),
       map(operand, move |r| new(Mv(d, r))),
       map(call, move |c| new(Call(Some(d), c))),
       map(str, move |r| new(LStr(d, unescape(r).unwrap().into()))), // must be valid here
-      map(tuple((tag(VTBL), space0, tag("<"), id, tag(">"))), move |(_, _, _, name, _)| new(LVTbl(d, name))),
-      map(tuple((tag(FUNC), space0, tag("<"), id, tag(">"))), move |(_, _, _, name, _)| new(LFunc(d, name))),
+      map(tuple((tag(VTBL), space0, tag("<"), identifier, tag(">"))), move |(_, _, _, name, _)| new(LVTbl(d, name))),
+      map(tuple((tag(FUNC), space0, tag("<"), identifier, tag(">"))), move |(_, _, _, name, _)| new(LFunc(d, name))),
       map(mem, move |(base, off)| new(Load(d, base, off))),
     )))),
     map(preceded(tuple((tag(PARAM), space1)), cut(operand)), move |r| new(Param(r))),
@@ -96,7 +94,7 @@ pub fn inst<'a>(i: Span<'a>) -> IResult<'a, RawInst> {
     map(preceded(tuple((tag("if"), space0)),
                  cut(tuple((tag("("), space0, operand, space0, alt((tag("!="), tag("=="))), space0, tag("0"), space0, tag(")"),
                             space0, branch)))), move |(_, _, r, _, z, _, _, _, _, _, l)| new(B(r, z.fragment == "==", l))),
-    map(tuple((label, space0, tag(":"))), move |(l, _, _)| new(Label(l))),
+    map(tuple((id, space0, tag(":"))), move |(l, _, _)| new(Label(l))),
     map(tuple((mem, space0, tag("="), space0, operand)), move |((base, off), _, _, _, r)| new(Store(r, base, off))),
   ))(i).map(|(rem, mut inst)| {
     inst.code = &i.fragment[0..rem.offset - i.offset];
@@ -113,7 +111,7 @@ fn curly_braced<'a, O>(parser: impl Fn(Span<'a>) -> nom::IResult<Span<'a>, O>) -
 
 pub fn func(i: Span) -> IResult<RawFunc> {
   let (i, name) = preceded(tuple((tag(FUNC), space0, tag("<"), space0)),
-                           terminated(id, tuple((space0, tag(">"), multispace0))))(i)?;
+                           terminated(identifier, tuple((space0, tag(">"), multispace0))))(i)?;
   let (i, code) = cut(curly_braced(inst))(i)?;
   Ok((i, RawFunc { name, line: i.line, code }))
 }
@@ -124,14 +122,14 @@ pub fn vtbl_slot<'a>(i: Span<'a>) -> IResult<RawVTblSlot<'a>> {
   alt((
     map(str, move |s| new(String(unescape(s).unwrap().into()))),
     map(int, move |i| new(Int(i))),
-    map(tuple((tag(VTBL), space0, tag("<"), id, tag(">"))), move |(_, _, _, name, _)| new(VTblRef(name))),
-    map(tuple((tag(FUNC), space0, tag("<"), id, tag(">"))), move |(_, _, _, name, _)| new(FuncRef(name))),
+    map(tuple((tag(VTBL), space0, tag("<"), identifier, tag(">"))), move |(_, _, _, name, _)| new(VTblRef(name))),
+    map(tuple((tag(FUNC), space0, tag("<"), identifier, tag(">"))), move |(_, _, _, name, _)| new(FuncRef(name))),
   ))(i)
 }
 
 pub fn vtbl(i: Span) -> IResult<RawVTbl> {
   let (i, name) = preceded(tuple((tag(VTBL), space0, tag("<"), space0)),
-                           terminated(id, tuple((space0, tag(">"), multispace0))))(i)?;
+                           terminated(identifier, tuple((space0, tag(">"), multispace0))))(i)?;
   let (i, data) = cut(curly_braced(vtbl_slot))(i)?;
   Ok((i, RawVTbl { name, line: i.line, data }))
 }

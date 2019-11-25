@@ -1,5 +1,5 @@
 use std::io::{self, Write, BufRead, BufReader};
-use crate::{mem::Mem, error::Error, program::{Program, Inst, VTblSlot, Operand}, util::ReadHelper, UNINITIALIZED, REG_PREFIX, FUNC_OFFSET};
+use crate::{mem::Mem, error::Error, program::{Program, Inst, VTblSlot, Operand}, util::ReadHelper, UNINITIALIZED, ID_PREFIX, FUNC_OFFSET};
 
 pub struct RunConfig {
   pub inst_limit: u32,
@@ -154,7 +154,7 @@ impl VM<'_> {
       for (idx, &x) in f.data.iter().enumerate() {
         if !first { write!(wt, ", ")?; }
         first = false;
-        write!(wt, "{}{} = {}", REG_PREFIX, idx, x)?;
+        write!(wt, "{}{} = {}", ID_PREFIX, idx, x)?;
         if let Some(s) = self.guess_value(x) { write!(wt, "{}", s)?; }
       }
       writeln!(wt, "]")?;

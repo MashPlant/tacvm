@@ -14,8 +14,7 @@ pub const PARAM: &str = "parm";
 pub const CALL: &str = "call";
 pub const RETURN: &str = "return";
 pub const BRANCH: &str = "branch";
-pub const REG_PREFIX: &str = "_T";
-pub const LABEL_PREFIX: &str = "_L";
+pub const ID_PREFIX: &str = "%";
 
 // the id of str / func starts growing from *_OFFSET; we won't depend on it, it is only used for debugging
 pub const STR_OFFSET: i32 = 0xA0000000u32 as i32;
