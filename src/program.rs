@@ -229,7 +229,7 @@ impl<'a> Program<'a> {
           }
           &RawInstKind::Label(_) => continue,
           &RawInstKind::Load(d, base, off) => Load(upd(d), upd(base), off),
-          &RawInstKind::Store(r, base, off) => match r { Reg(r) => StoreR(upd(r), base, off), Const(r) => StoreC(r, base, off) }
+          &RawInstKind::Store(r, base, off) => match r { Reg(r) => StoreR(upd(r), upd(base), off), Const(r) => StoreC(r, upd(base), off) }
           RawInstKind::LStr(d, s) => LStr(upd(*d), str_pool.insert_full(s).0 as u32),
           &RawInstKind::LVTbl(d, v) => LVTbl(upd(d), if let Some((idx, _)) = vtbl_set.get_full(v) { idx as u32 } else { return Err(format!("line {}: no such vtbl `{}`", i.line, v)); }),
           &RawInstKind::LFunc(d, v) => Li(upd(d), if let Some((idx, _)) = func_set.get_full(v) { idx as i32 + FUNC_OFFSET } else { return Err(format!("line {}: no such vtbl `{}`", i.line, v)); }),
