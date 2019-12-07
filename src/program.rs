@@ -224,7 +224,7 @@ impl<'a> Program<'a> {
             let l = chk_label(l)?;
             match r {
               Reg(r) => if z { Bz(upd(r), l) } else { Bnz(upd(r), l) },
-              Const(r) => J(if z == (r == 0) { l } else { idx }),
+              Const(r) => J(if z == (r == 0) { l } else { idx + 1 }),
             }
           }
           &RawInstKind::Label(_) => continue,
