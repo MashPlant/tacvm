@@ -189,14 +189,17 @@ pub fn intrinsic(name: &str) -> Option<IntrinsicFn> {
     "_StringEqual" => Some(|l, r, mem, _| Ok((mem.get_str(l)? == mem.get_str(r)?) as i32)),
     "_PrintInt" => Some(|i, _, _, cfg| {
       write!(cfg.vm_output, "{}", i).map_err(|_| Error::IO)?;
+      cfg.vm_output.flush().map_err(|_| Error::IO)?;
       Ok(0)
     }),
     "_PrintString" => Some(|s, _, mem, cfg| {
       write!(cfg.vm_output, "{}", mem.get_str(s)?).map_err(|_| Error::IO)?;
+      cfg.vm_output.flush().map_err(|_| Error::IO)?;
       Ok(0)
     }),
     "_PrintBool" => Some(|b, _, _, cfg| {
       write!(cfg.vm_output, "{}", b != 0).map_err(|_| Error::IO)?;
+      cfg.vm_output.flush().map_err(|_| Error::IO)?;
       Ok(0)
     }),
     "_Halt" => Some(|_, _, _, _| Err(Error::Halt)),
